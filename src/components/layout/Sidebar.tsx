@@ -27,16 +27,16 @@ const Sidebar = () => {
   const menuItems = [
     { icon: Home, label: "Ana Sayfa", path: "/" },
     { icon: LogIn, label: "Giriş", path: "/login" },
-    { icon: User, label: "Çalışan Paneli", path: "/employee-dashboard" },
+    //{ icon: User, label: "Çalışan Paneli", path: "/employee-dashboard" },
     { icon: Users, label: "Çalışanlar", path: "/employees" },
     { icon: Network, label: "Organizasyon Şeması", path: "/organization-chart" },
     { icon: PartyPopper, label: "Etkinlikler", path: "/events" },
     { icon: Newspaper, label: "Haberler", path: "/news" },
     { icon: CalendarDays, label: "Takvim", path: "/calendar" },
-    { icon: MessageSquare, label: "Mesajlar", path: "/messages" },
-    { icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
-    { icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
-    { icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
+    //{ icon: MessageSquare, label: "Mesajlar", path: "/messages" },
+    //{ icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
+    //{ icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
+    //{ icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
   ];
 
   const isActiveRoute = (path: string) => {
