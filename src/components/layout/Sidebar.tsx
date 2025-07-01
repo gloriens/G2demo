@@ -34,8 +34,8 @@ const Sidebar = () => {
     { icon: Newspaper, label: "Haberler", path: "/news" },
     { icon: CalendarDays, label: "Takvim", path: "/calendar" },
     { icon: MessageSquare, label: "Mesajlar", path: "/messages" },
-    { icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
-    { icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
+    // { icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
+    // { icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
     { icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
   ];
 
@@ -136,12 +136,12 @@ const Sidebar = () => {
             )}
           </div>
           
-          {!isCollapsed && (
+          {/* {!isCollapsed && (
             <button className="mt-3 w-full flex items-center space-x-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
               <Settings className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm truncate">Ayarlar</span>
             </button>
-          )}
+          )} */}
         </div>
       </aside>
 
