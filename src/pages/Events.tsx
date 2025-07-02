@@ -1,13 +1,17 @@
-
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
-import { PartyPopper, Plus, Calendar, MapPin, Clock, Users } from "lucide-react";
+import { PartyPopper, Plus, Calendar, MapPin, Clock, Users, Check, X, Edit, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Link } from "react-router-dom";
 
 const Events = () => {
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, eventId: 0, eventTitle: "" });
+  const { toast } = useToast();
   
-  const events = [
+  const [events, setEvents] = useState([
     {
       id: 1,
       title: "Şirket Pikniği",
@@ -17,7 +21,8 @@ const Events = () => {
       location: "Belgrad Ormanı",
       attendees: 85,
       status: "Yaklaşan",
-      category: "Sosyal"
+      category: "Sosyal",
+      approved: true
     },
     {
       id: 2,
@@ -28,7 +33,8 @@ const Events = () => {
       location: "Konferans Salonu",
       attendees: 45,
       status: "Aktif",
-      category: "Eğitim"
+      category: "Eğitim",
+      approved: true
     },
     {
       id: 3,
@@ -39,26 +45,75 @@ const Events = () => {
       location: "Otel Ballroom",
       attendees: 120,
       status: "Tamamlandı",
-      category: "Kutlama"
+      category: "Kutlama",
+      approved: true
     },
     {
       id: 4,
-      title: "Ekip Toplantısı",
-      description: "Aylık genel değerlendirme toplantısı",
-      date: "30.01.2024",
-      time: "09:00 - 11:00",
-      location: "Toplantı Odası A",
-      attendees: 25,
-      status: "Yaklaşan",
-      category: "Toplantı"
+      title: "Takım Çalışması Eğitimi",
+      description: "Departmanlar arası iş birliği geliştirme eğitimi",
+      date: "20.02.2024",
+      time: "09:00 - 17:00",
+      location: "Eğitim Salonu",
+      attendees: 30,
+      status: "Onay Bekliyor",
+      category: "Eğitim",
+      approved: false
+    },
+    {
+      id: 5,
+      title: "Bahar Festivali",
+      description: "Şirket bahçesinde bahar kutlaması",
+      date: "15.03.2024",
+      time: "12:00 - 18:00",
+      location: "Şirket Bahçesi",
+      attendees: 60,
+      status: "Onay Bekliyor",
+      category: "Sosyal",
+      approved: false
     }
-  ];
+  ]);
+
+  const handleApproveEvent = (id: number, title: string) => {
+    setEvents(events.map(event => 
+      event.id === id ? { ...event, approved: true, status: 'Yaklaşan' } : event
+    ));
+    toast({
+      title: "Etkinlik Onaylandı",
+      description: `${title} etkinliği başarıyla onaylandı.`,
+      variant: "default"
+    });
+  };
+
+  const handleRejectEvent = (id: number, title: string) => {
+    setEvents(events.filter(event => event.id !== id));
+    toast({
+      title: "Etkinlik Reddedildi",
+      description: `${title} etkinliği reddedildi ve sistemden kaldırıldı.`,
+      variant: "destructive"
+    });
+  };
+
+  const handleDeleteEvent = (id: number, title: string) => {
+    setDeleteDialog({ open: true, eventId: id, eventTitle: title });
+  };
+
+  const confirmDeleteEvent = () => {
+    setEvents(events.filter(event => event.id !== deleteDialog.eventId));
+    toast({
+      title: "Etkinlik Silindi",
+      description: `${deleteDialog.eventTitle} başarıyla silindi.`,
+      variant: "destructive"
+    });
+    setDeleteDialog({ open: false, eventId: 0, eventTitle: "" });
+  };
 
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'Aktif': return 'bg-green-100 text-green-800 border-green-200';
       case 'Yaklaşan': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'Tamamlandı': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Onay Bekliyor': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -72,6 +127,14 @@ const Events = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const filteredEvents = events.filter(event => {
+    if (activeTab === "pending") return !event.approved;
+    if (activeTab === "approved") return event.approved;
+    return true;
+  });
+
+  const pendingEvents = events.filter(event => !event.approved);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -88,68 +151,39 @@ const Events = () => {
                   <h2 className="text-3xl font-bold text-gray-800 mb-2">Etkinlikler</h2>
                   <p className="text-gray-600">Şirket etkinliklerini yönetin ve takip edin</p>
                 </div>
-                <button 
-                  onClick={() => setShowAddForm(!showAddForm)}
+                <Link 
+                  to="/add-event"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
                 >
                   <Plus className="h-5 w-5" />
                   <span>Yeni Etkinlik</span>
-                </button>
+                </Link>
               </div>
             </div>
 
-            {/* Add Event Form */}
-            {showAddForm && (
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Yeni Etkinlik Ekle</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Etkinlik Adı</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                      <option>Sosyal</option>
-                      <option>Eğitim</option>
-                      <option>Kutlama</option>
-                      <option>Toplantı</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tarih</label>
-                    <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Saat</label>
-                    <input type="time" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Konum</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Kapasite</label>
-                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
-                    <textarea rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-4 mt-4">
-                  <button 
-                    onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    İptal
-                  </button>
-                  <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                    Etkinlik Ekle
-                  </button>
-                </div>
+            {/* Tabs */}
+            <div className="mb-8">
+              <div className="flex space-x-4 border-b border-gray-200">
+                <button 
+                  onClick={() => setActiveTab("all")}
+                  className={`pb-2 px-4 font-medium ${activeTab === "all" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
+                >
+                  Tüm Etkinlikler
+                </button>
+                <button 
+                  onClick={() => setActiveTab("pending")}
+                  className={`pb-2 px-4 font-medium ${activeTab === "pending" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
+                >
+                  Onay Bekleyen ({pendingEvents.length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab("approved")}
+                  className={`pb-2 px-4 font-medium ${activeTab === "approved" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"}`}
+                >
+                  Onaylanmış
+                </button>
               </div>
-            )}
+            </div>
 
             {/* Event Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -191,12 +225,12 @@ const Events = () => {
               
               <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                 <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <Users className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-yellow-100 rounded-full">
+                    <Clock className="h-6 w-6 text-yellow-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-800">275</p>
-                    <p className="text-gray-600 text-sm">Toplam Katılım</p>
+                    <p className="text-2xl font-bold text-gray-800">{pendingEvents.length}</p>
+                    <p className="text-gray-600 text-sm">Onay Bekleyen</p>
                   </div>
                 </div>
               </div>
@@ -204,7 +238,7 @@ const Events = () => {
 
             {/* Events Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
+              {filteredEvents.map((event) => (
                 <div key={event.id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -240,13 +274,47 @@ const Events = () => {
                   </div>
                   
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    <div className="flex justify-between">
-                      <button className="text-blue-600 hover:text-blue-800 font-medium">Detaylar</button>
-                      <div className="space-x-2">
-                        <button className="text-gray-600 hover:text-gray-800">Düzenle</button>
-                        <button className="text-red-600 hover:text-red-800">Sil</button>
+                    {!event.approved ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Onay Bekliyor</span>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => handleApproveEvent(event.id, event.title)}
+                            className="flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Onayla
+                          </button>
+                          <button 
+                            onClick={() => handleRejectEvent(event.id, event.title)}
+                            className="flex items-center px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Reddet
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex justify-between">
+                        <button className="text-blue-600 hover:text-blue-800 font-medium">Detaylar</button>
+                        <div className="flex items-center space-x-2">
+                          <Link 
+                            to={`/edit-event/${event.id}`}
+                            className="flex items-center text-gray-600 hover:text-gray-800"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Düzenle
+                          </Link>
+                          <button 
+                            onClick={() => handleDeleteEvent(event.id, event.title)}
+                            className="flex items-center text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Sil
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -254,6 +322,17 @@ const Events = () => {
           </div>
         </main>
       </div>
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+        title="Etkinliği Sil"
+        description={`${deleteDialog.eventTitle} etkinliğini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
+        onConfirm={confirmDeleteEvent}
+        confirmText="Sil"
+        cancelText="İptal"
+        variant="destructive"
+      />
     </div>
   );
 };
