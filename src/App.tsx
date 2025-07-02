@@ -18,6 +18,8 @@ import LeaveManagement from "./pages/LeaveManagement";
 import MyLeaveRequests from "./pages/MyLeaveRequests";
 import Documents from "./pages/Documents";
 import NewsDetail from "./pages/NewsDetail";
+import AddEvent from "./pages/AddEvent";
+import EditEvent from "./pages/EditEvent.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/employees" element={<Employees />} />
           <Route path="/organization-chart" element={<OrganizationChart />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/add-event" element={<AddEvent />} />
+          <Route path="/edit-event/:id" element={<EditEvent />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/calendar" element={<Calendar />} />
