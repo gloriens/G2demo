@@ -33,9 +33,9 @@ const Sidebar = () => {
     { icon: PartyPopper, label: "Etkinlikler", path: "/events" },
     { icon: Newspaper, label: "Haberler", path: "/news" },
     { icon: CalendarDays, label: "Takvim", path: "/calendar" },
-    //{ icon: MessageSquare, label: "Mesajlar", path: "/messages" },
-    //{ icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
-    //{ icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
+    { icon: MessageSquare, label: "Mesajlar", path: "/messages" },
+    { icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
+    { icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
     { icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
   ];
 
