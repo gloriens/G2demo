@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -15,7 +14,8 @@ import {
   Search, 
   Filter,
   Calendar,
-  User
+  User,
+  Trash  // <-- Buraya trash ikonunu ekledim
 } from "lucide-react";
 
 interface Document {
@@ -122,6 +122,11 @@ const Documents = () => {
     // Burada dosya yükleme işlemi yapılacak
   };
 
+  const handleDelete = (doc: Document) => {
+    console.log(`Deleting: ${doc.name}`);
+    // Burada dosya silme işlemi yapılacak
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
@@ -213,6 +218,15 @@ const Documents = () => {
                             >
                               <Download className="w-4 h-4 mr-1" />
                               İndir
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(doc)}
+                              size="sm"
+                              variant="destructive"
+                              className="flex items-center bg-red-600 hover:bg-red-700"
+                            >
+                              <Trash className="w-4 h-4 mr-1" />
+                              Sil
                             </Button>
                           </div>
                         </div>
