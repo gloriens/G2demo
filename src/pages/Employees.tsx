@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "@/components/layout/Sidebar";
@@ -7,8 +6,8 @@ import { Users, Search, Plus, Mail, Calendar, User, Network } from "lucide-react
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const employees = [
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [employeeList, setEmployeeList] = useState([
     {
       id: 1,
       name: "Ahmet Yılmaz",
@@ -59,22 +58,22 @@ const Employees = () => {
       startDate: "05.11.2022",
       status: "Aktif"
     }
-  ];
+  ]);
 
-  const filteredEmployees = employees.filter(employee =>
+  const [newEmployee, setNewEmployee] = useState({
+    name: "",
+    position: "",
+    department: "",
+    email: "",
+    phone: "",
+    startDate: "",
+  });
+
+  const filteredEmployees = employeeList.filter(employee =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'Aktif': return 'bg-green-100 text-green-800';
-      case 'İzinli': return 'bg-orange-100 text-orange-800';
-      case 'Pasif': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -99,13 +98,107 @@ const Employees = () => {
                     <Network className="h-5 w-5" />
                     <span>Organizasyon Şeması</span>
                   </Link>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors">
+                  <button
+                    onClick={() => setIsFormOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
+                  >
                     <Plus className="h-5 w-5" />
                     <span>Yeni Çalışan</span>
                   </button>
                 </div>
               </div>
             </div>
+
+            {/* Yeni Çalışan Formu */}
+            {isFormOpen && (
+              <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-blue-200">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Yeni Çalışan Ekle</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    className="border p-3 rounded"
+                    type="text"
+                    placeholder="Ad Soyad"
+                    value={newEmployee.name}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+                  />
+                  <input
+                    className="border p-3 rounded"
+                    type="text"
+                    placeholder="Pozisyon"
+                    value={newEmployee.position}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })}
+                  />
+                  <input
+                    className="border p-3 rounded"
+                    type="text"
+                    placeholder="Departman"
+                    value={newEmployee.department}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })}
+                  />
+                  <input
+                    className="border p-3 rounded"
+                    type="email"
+                    placeholder="Email"
+                    value={newEmployee.email}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                  />
+                  <input
+                    className="border p-3 rounded"
+                    type="tel"
+                    placeholder="Telefon"
+                    value={newEmployee.phone}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value })}
+                  />
+                  <input
+                    className="border p-3 rounded"
+                    type="date"
+                    value={newEmployee.startDate}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="mt-4 flex space-x-3">
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                    onClick={() => {
+                      if (
+                        newEmployee.name &&
+                        newEmployee.position &&
+                        newEmployee.department &&
+                        newEmployee.email &&
+                        newEmployee.phone &&
+                        newEmployee.startDate
+                      ) {
+                        const newEmp = {
+                          ...newEmployee,
+                          id: Date.now(),
+                          status: "Aktif"
+                        };
+                        setEmployeeList([...employeeList, newEmp]);
+                        setNewEmployee({
+                          name: "",
+                          position: "",
+                          department: "",
+                          email: "",
+                          phone: "",
+                          startDate: "",
+                        });
+                        setIsFormOpen(false);
+                      } else {
+                        alert("Lütfen tüm alanları doldurun.");
+                      }
+                    }}
+                  >
+                    Kaydet
+                  </button>
+                  <button
+                    className="bg-gray-300 px-4 py-2 rounded"
+                    onClick={() => setIsFormOpen(false)}
+                  >
+                    İptal
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Search and Filter */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
@@ -139,7 +232,7 @@ const Employees = () => {
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-800">{employees.length}</p>
+                    <p className="text-2xl font-bold text-gray-800">{employeeList.length}</p>
                     <p className="text-gray-600 text-sm">Toplam Çalışan</p>
                   </div>
                 </div>
@@ -151,7 +244,7 @@ const Employees = () => {
                     <User className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-800">{employees.filter(e => e.status === 'Aktif').length}</p>
+                    <p className="text-2xl font-bold text-gray-800">{employeeList.filter(e => e.status === 'Aktif').length}</p>
                     <p className="text-gray-600 text-sm">Aktif Çalışan</p>
                   </div>
                 </div>
@@ -163,7 +256,7 @@ const Employees = () => {
                     <Calendar className="h-6 w-6 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-800">{employees.filter(e => e.status === 'İzinli').length}</p>
+                    <p className="text-2xl font-bold text-gray-800">{employeeList.filter(e => e.status === 'İzinli').length}</p>
                     <p className="text-gray-600 text-sm">İzinli Çalışan</p>
                   </div>
                 </div>
@@ -175,7 +268,7 @@ const Employees = () => {
                     <Plus className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-800">5</p>
+                    <p className="text-2xl font-bold text-gray-800">{employeeList.length}</p>
                     <p className="text-gray-600 text-sm">Bu Ay Eklenen</p>
                   </div>
                 </div>
@@ -197,7 +290,6 @@ const Employees = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departman</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İletişim</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlangıç</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                     </tr>
                   </thead>
@@ -228,11 +320,6 @@ const Employees = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.startDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(employee.status)}`}>
-                            {employee.status}
-                          </span>
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button className="text-blue-600 hover:text-blue-900 mr-3">Düzenle</button>
                           <button className="text-red-600 hover:text-red-900">Sil</button>
