@@ -36,7 +36,7 @@ const Sidebar = () => {
     //{ icon: MessageSquare, label: "Mesajlar", path: "/messages" },
     //{ icon: FileText, label: "İzin Yönetimi", path: "/leave-management" },
     //{ icon: Clock, label: "İzin Taleplerim", path: "/my-leave-requests" },
-    //{ icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
+    { icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
   ];
 
   const isActiveRoute = (path: string) => {
