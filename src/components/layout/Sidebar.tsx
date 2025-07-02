@@ -27,7 +27,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: Home, label: "Ana Sayfa", path: "/" },
     { icon: LogIn, label: "Giriş", path: "/login" },
-    { icon: User, label: "Çalışan Paneli", path: "/employee-dashboard" },
+    //{ icon: User, label: "Çalışan Paneli", path: "/employee-dashboard" },
     { icon: Users, label: "Çalışanlar", path: "/employees" },
     { icon: Network, label: "Organizasyon Şeması", path: "/organization-chart" },
     { icon: PartyPopper, label: "Etkinlikler", path: "/events" },
