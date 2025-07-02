@@ -17,7 +17,7 @@ import NotFound from "./pages/NotFound";
 import LeaveManagement from "./pages/LeaveManagement";
 import MyLeaveRequests from "./pages/MyLeaveRequests";
 import Documents from "./pages/Documents";
-
+import NewsDetail from "./pages/NewsDetail";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -34,6 +34,7 @@ const App = () => (
           <Route path="/organization-chart" element={<OrganizationChart />} />
           <Route path="/events" element={<Events />} />
           <Route path="/news" element={<News />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/leave-management" element={<LeaveManagement />} />
