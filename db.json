@@ -1,0 +1,215 @@
+{
+  "departments": [
+    {
+      "id": "1",
+      "name": "Bilgi İşlem",
+      "location": "A Blok 3. Kat",
+      "email": "it@company.com",
+      "created_at": "2023-01-01T08:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "İnsan Kaynakları",
+      "location": "B Blok 2. Kat",
+      "email": "hr@company.com",
+      "created_at": "2023-01-01T08:00:00Z"
+    }
+  ],
+  "employees": [
+    {
+      "id": "1",
+      "email": "ahmet.yilmaz@company.com",
+      "password_hash": "$2b$10$hashedpassword123",
+      "first_name": "Ahmet",
+      "last_name": "Yılmaz",
+      "phone_number": "+90 532 123 45 67",
+      "department_id": 1,
+      "job_title": "Frontend Developer",
+      "date_of_joining": "2022-06-15",
+      "birthday": "1990-05-10",
+      "role": "employee",
+      "manager_id": null,
+      "created_at": "2022-06-15T08:00:00Z"
+    },
+    {
+      "id": "2",
+      "email": "zeynep.kaya@company.com",
+      "password_hash": "$2b$10$hashedpassword456",
+      "first_name": "Zeynep",
+      "last_name": "Kaya",
+      "phone_number": "+90 533 987 65 43",
+      "department_id": 2,
+      "job_title": "İK Uzmanı",
+      "date_of_joining": "2021-03-20",
+      "birthday": "1988-11-22",
+      "role": "manager",
+      "manager_id": null,
+      "created_at": "2021-03-20T08:00:00Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "1",
+      "title": "Şirket Pikniği 2024",
+      "description": "Tüm çalışanlarımızın katılacağı yıllık şirket pikniği etkinliği. Aileler de davetli.",
+      "category": "Kutlama",
+      "max_participants": 150,
+      "status": "active",
+      "cover_image": "https://images.unsplash.com/photo-1511578314322-379afb476865?w=600&h=300&fit=crop",
+      "start_time": "2024-07-20T14:00:00Z",
+      "end_time": "2024-07-20T18:00:00Z",
+      "location": "Belgrad Ormanı Piknik Alanı",
+      "is_approved": true,
+      "created_by": 2,
+      "created_at": "2024-06-15T09:00:00Z"
+    },
+    {
+      "title": "Yeni Ofis Açılışı",
+      "content": "İstanbul Maslak'ta yeni şubemiz 1 Şubat'ta hizmete girecek.",
+      "date": "1 saat önce",
+      "category": "Şirket Haberleri",
+      "id": "5855"
+    }
+  ],
+  "department_event": [
+    {
+      "department_id": 2,
+      "event_id": 1,
+      "role": "organizer",
+      "assigned_at": "2024-06-15T09:30:00Z",
+      "id": "215f"
+    }
+  ],
+  "news": [
+    {
+      "id": "1",
+      "title": "Yeni Ofis Açılışımız",
+      "content": "İstanbul Maslak'ta yeni şubemiz 1 Ağustos'ta hizmete girecek. Modern teknoloji altyapısı ile donatılmış yeni ofisimiz 500 kişilik kapasiteye sahip. Çalışanlarımız için sosyal alanlar, spor salonu ve kreş hizmeti de sunulacak.",
+      "created_by": 2,
+      "cover_image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=300&fit=crop",
+      "created_at": "2024-07-02T08:00:00Z"
+    },
+    {
+      "id": "2",
+      "title": "2024 Q2 Finansal Sonuçları",
+      "content": "2024 yılının ikinci çeyrek finansal sonuçları açıklandı. Hedeflediğimiz büyüme oranını %18 üzerinde gerçekleştirerek başarılı bir dönem geçirdik. Tüm departmanlar hedeflerini aştı.",
+      "created_by": 2,
+      "cover_image": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=300&fit=crop",
+      "created_at": "2024-07-01T14:30:00Z"
+    }
+  ],
+  "department_news": [
+    {
+      "department_id": 2,
+      "news_id": 1,
+      "assigned_at": "2024-07-02T08:15:00Z",
+      "id": "7eeb"
+    },
+    {
+      "department_id": 1,
+      "news_id": 2,
+      "assigned_at": "2024-07-01T14:45:00Z",
+      "id": "4ad6"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "1",
+      "title": "Sistem Bakımı Duyurusu",
+      "content": "15 Temmuz Pazartesi günü saat 02:00-06:00 arası sistem bakımı yapılacaktır. Bu süre zarfında tüm sistemlere erişim mümkün olmayacaktır. Önemli işlemlerinizi önceden tamamlamanızı rica ederiz.",
+      "created_by": 1,
+      "is_public": true,
+      "expires_at": "2024-07-16T00:00:00Z",
+      "status": "active",
+      "created_at": "2024-07-10T12:00:00Z"
+    },
+    {
+      "id": "2",
+      "title": "Yeni İK Politikaları",
+      "content": "1 Ağustos'tan itibaren geçerli olmak üzere esnek çalışma saatleri uygulamasına geçiyoruz. Detaylı bilgi için İK departmanından bilgi alabilirsiniz.",
+      "created_by": 2,
+      "is_public": false,
+      "expires_at": "2024-08-31T23:59:59Z",
+      "status": "active",
+      "created_at": "2024-07-05T09:00:00Z"
+    }
+  ],
+  "department_announcement": [
+    {
+      "department_id": 1,
+      "announcement_id": 1,
+      "assigned_at": "2024-07-10T12:15:00Z",
+      "id": "a8de"
+    },
+    {
+      "department_id": 2,
+      "announcement_id": 2,
+      "assigned_at": "2024-07-05T09:15:00Z",
+      "id": "e0f2"
+    }
+  ],
+  "documents": [
+    {
+      "id": "1",
+      "title": "Çalışan El Kitabı 2024",
+      "description": "Şirket politikaları, çalışan hakları ve sorumlulukları ile ilgili kapsamlı rehber",
+      "file_url": "/documents/employee-handbook-2024.pdf",
+      "uploaded_by": 2,
+      "uploaded_at": "2024-01-15T11:00:00Z"
+    },
+    {
+      "id": "2",
+      "title": "IT Güvenlik Politikaları",
+      "description": "Bilgi güvenliği, parola politikaları ve sistem kullanım kuralları",
+      "file_url": "/documents/it-security-policies.pdf",
+      "uploaded_by": 1,
+      "uploaded_at": "2024-06-01T10:30:00Z"
+    }
+  ],
+  "department_document": [
+    {
+      "department_id": 2,
+      "document_id": 1,
+      "assigned_at": "2024-01-15T11:15:00Z",
+      "id": "8f11"
+    },
+    {
+      "department_id": 1,
+      "document_id": 2,
+      "assigned_at": "2024-06-01T10:45:00Z",
+      "id": "31ec"
+    }
+  ],
+  "leaveRequests": [
+    {
+      "id": "1",
+      "employee_id": 1,
+      "employeeName": "Ahmet Yılmaz",
+      "startDate": "2024-07-22",
+      "endDate": "2024-07-26",
+      "leaveType": "annual",
+      "reason": "Aile ziyareti ve dinlenme amaçlı yıllık izin kullanmak istiyorum.",
+      "emergencyContact": "+90 532 111 22 33",
+      "requestDate": "2024-07-05",
+      "status": "pending",
+      "rejectionReason": null,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "id": "2",
+      "employee_id": 2,
+      "employeeName": "Zeynep Kaya",
+      "startDate": "2024-08-01",
+      "endDate": "2024-08-05",
+      "leaveType": "sick",
+      "reason": "Doktor raporu gereği istirahat almam gerekiyor.",
+      "emergencyContact": "+90 533 444 55 66",
+      "requestDate": "2024-07-28",
+      "status": "approved",
+      "rejectionReason": null,
+      "approved_by": 2,
+      "approved_at": "2024-07-29T09:30:00Z"
+    }
+  ]
+}
