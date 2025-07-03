@@ -1,111 +1,55 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
-import { PartyPopper, Plus, Calendar, MapPin, Clock, Users, Check, X, Edit, Trash2 } from "lucide-react";
+import { PartyPopper, Plus, Calendar, MapPin, Clock, Users, Check, X, Edit, Trash2, Axis3DIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "react-router-dom";
+
+import { useEvents } from "../hooks/useEvents"; 
 
 const Events = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [deleteDialog, setDeleteDialog] = useState({ open: false, eventId: 0, eventTitle: "" });
   const { toast } = useToast();
-  
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: "Şirket Pikniği",
-      description: "Yıllık şirket pikniği etkinliği",
-      date: "25.06.2024",
-      time: "10:00 - 18:00",
-      location: "Belgrad Ormanı",
-      attendees: 85,
-      status: "Yaklaşan",
-      category: "Sosyal",
-      approved: true
-    },
-    {
-      id: 2,
-      title: "Teknoloji Semineri",
-      description: "Yapay Zeka ve Gelecek konulu seminer",
-      date: "15.02.2024",
-      time: "14:00 - 16:00",
-      location: "Konferans Salonu",
-      attendees: 45,
-      status: "Aktif",
-      category: "Eğitim",
-      approved: true
-    },
-    {
-      id: 3,
-      title: "Yeni Yıl Partisi",
-      description: "2024 Yeni Yıl kutlama etkinliği",
-      date: "31.12.2023",
-      time: "19:00 - 24:00",
-      location: "Otel Ballroom",
-      attendees: 120,
-      status: "Tamamlandı",
-      category: "Kutlama",
-      approved: true
-    },
-    {
-      id: 4,
-      title: "Takım Çalışması Eğitimi",
-      description: "Departmanlar arası iş birliği geliştirme eğitimi",
-      date: "20.02.2024",
-      time: "09:00 - 17:00",
-      location: "Eğitim Salonu",
-      attendees: 30,
-      status: "Onay Bekliyor",
-      category: "Eğitim",
-      approved: false
-    },
-    {
-      id: 5,
-      title: "Bahar Festivali",
-      description: "Şirket bahçesinde bahar kutlaması",
-      date: "15.03.2024",
-      time: "12:00 - 18:00",
-      location: "Şirket Bahçesi",
-      attendees: 60,
-      status: "Onay Bekliyor",
-      category: "Sosyal",
-      approved: false
-    }
-  ]);
 
-  const handleApproveEvent = (id: number, title: string) => {
-    setEvents(events.map(event => 
-      event.id === id ? { ...event, approved: true, status: 'Yaklaşan' } : event
-    ));
-    toast({
-      title: "Etkinlik Onaylandı",
-      description: `${title} etkinliği başarıyla onaylandı.`,
-      variant: "default"
-    });
+  const { 
+    events, 
+    loading, 
+    error, 
+    eventStats, 
+    deleteEvent, 
+    approveEvent 
+  } = useEvents();
+
+
+  const handleApproveEvent = async (id: number, title: string) => {
+    try {
+      await approveEvent(id);
+    } catch (error) {
+    }
   };
 
-  const handleRejectEvent = (id: number, title: string) => {
-    setEvents(events.filter(event => event.id !== id));
-    toast({
-      title: "Etkinlik Reddedildi",
-      description: `${title} etkinliği reddedildi ve sistemden kaldırıldı.`,
-      variant: "destructive"
-    });
+  const handleRejectEvent = async (id: number, title: string) => {
+    try {
+      await deleteEvent(id);
+    } catch (error) {
+ 
+    }
   };
 
   const handleDeleteEvent = (id: number, title: string) => {
     setDeleteDialog({ open: true, eventId: id, eventTitle: title });
   };
 
-  const confirmDeleteEvent = () => {
-    setEvents(events.filter(event => event.id !== deleteDialog.eventId));
-    toast({
-      title: "Etkinlik Silindi",
-      description: `${deleteDialog.eventTitle} başarıyla silindi.`,
-      variant: "destructive"
-    });
-    setDeleteDialog({ open: false, eventId: 0, eventTitle: "" });
+  const confirmDeleteEvent = async () => {
+    try {
+      await deleteEvent(deleteDialog.eventId);
+    } catch (error) {
+      // Error zaten hook içinde handle ediliyor
+    } finally {
+      setDeleteDialog({ open: false, eventId: 0, eventTitle: "" });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -129,12 +73,12 @@ const Events = () => {
   };
 
   const filteredEvents = events.filter(event => {
-    if (activeTab === "pending") return !event.approved;
-    if (activeTab === "approved") return event.approved;
+    if (activeTab === "pending") return !event.is_approved;
+    if (activeTab === "approved") return event.is_approved;
     return true;
   });
 
-  const pendingEvents = events.filter(event => !event.approved);
+  const pendingEvents = events.filter(event => !event.is_approved);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -243,7 +187,7 @@ const Events = () => {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
-                        {event.category}
+                        {event.eventType}
                       </span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(event.status)}`}>
                         {event.status}
@@ -256,11 +200,11 @@ const Events = () => {
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-gray-600">
                         <Calendar className="h-4 w-4 mr-2" />
-                        <span>{event.date}</span>
+                        <span>{event.startTime}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Clock className="h-4 w-4 mr-2" />
-                        <span>{event.time}</span>
+                        <span>{event.endTime}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="h-4 w-4 mr-2" />
@@ -274,9 +218,9 @@ const Events = () => {
                   </div>
                   
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    {!event.approved ? (
+                    {!event.isApproved ? (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Onay Bekliyor</span>
+                        <span className="text-sm text-gray-600">Onay Bekliyor {event.is_approved}</span>
                         <div className="flex space-x-2">
                           <button 
                             onClick={() => handleApproveEvent(event.id, event.title)}
