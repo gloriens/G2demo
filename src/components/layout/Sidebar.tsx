@@ -31,11 +31,11 @@ const Sidebar = () => {
     { icon: Home, label: "Ana Sayfa", path: "/" },
     { icon: LogIn, label: "Giriş", path: "/login" },
     { icon: Users, label: "Çalışanlar", path: "/employees" },
-    { icon: Network, label: "Organizasyon Şeması", path: "/organization-chart" },
+   // { icon: Network, label: "Organizasyon Şeması", path: "/organization-chart" },
     { icon: PartyPopper, label: "Etkinlikler", path: "/events" },
     { icon: Newspaper, label: "Haberler", path: "/news" },
     { icon: CalendarDays, label: "Takvim", path: "/calendar" },
-    { icon: MessageSquare, label: "Mesajlar", path: "/messages" },
+    // { icon: MessageSquare, label: "Mesajlar", path: "/messages" }, // Mesajlar kısmı yorum satırı
     { icon: FolderOpen, label: "Dosya Yönetimi", path: "/documents" },
   ];
 

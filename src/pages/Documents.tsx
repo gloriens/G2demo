@@ -15,7 +15,7 @@ import {
   Filter,
   Calendar,
   User,
-  Trash  // <-- Buraya trash ikonunu ekledim
+  Trash
 } from "lucide-react";
 
 interface Document {
@@ -26,7 +26,7 @@ interface Document {
   uploadDate: string;
   uploadedBy: string;
   category: "hakediş" | "sözleşme" | "policy" | "form" | "diğer";
-  downloadCount: number;
+  //downloadCount: number;
 }
 
 const Documents = () => {
@@ -42,7 +42,7 @@ const Documents = () => {
       uploadDate: "2024-12-25",
       uploadedBy: "İK Departmanı",
       category: "hakediş",
-      downloadCount: 156
+     // downloadCount: 156
     },
     {
       id: 2,
@@ -52,7 +52,7 @@ const Documents = () => {
       uploadDate: "2024-01-15",
       uploadedBy: "İK Departmanı",
       category: "policy",
-      downloadCount: 89
+      //downloadCount: 89
     },
     {
       id: 3,
@@ -62,7 +62,7 @@ const Documents = () => {
       uploadDate: "2024-03-10",
       uploadedBy: "İK Departmanı",
       category: "form",
-      downloadCount: 234
+      //downloadCount: 234
     },
     {
       id: 4,
@@ -72,7 +72,7 @@ const Documents = () => {
       uploadDate: "2024-11-30",
       uploadedBy: "Muhasebe",
       category: "hakediş",
-      downloadCount: 67
+     // downloadCount: 67
     },
     {
       id: 5,
@@ -82,7 +82,7 @@ const Documents = () => {
       uploadDate: "2024-02-20",
       uploadedBy: "İSG Uzmanı",
       category: "policy",
-      downloadCount: 145
+      //downloadCount: 145
     }
   ];
 
@@ -114,50 +114,50 @@ const Documents = () => {
 
   const handleDownload = (doc: Document) => {
     console.log(`Downloading: ${doc.name}`);
-    // Burada dosya indirme işlemi yapılacak
+    // Dosya indirme işlemi burada yapılacak
   };
 
   const handleUpload = () => {
     console.log("Opening file upload dialog");
-    // Burada dosya yükleme işlemi yapılacak
+    // Dosya yükleme işlemi burada yapılacak
   };
 
   const handleDelete = (doc: Document) => {
     console.log(`Deleting: ${doc.name}`);
-    // Burada dosya silme işlemi yapılacak
+    // Dosya silme işlemi burada yapılacak
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      <Sidebar className="hidden md:block" />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Dosya Yönetimi</h2>
-              <p className="text-gray-600">Şirket dosyalarını görüntüleyin ve indirin</p>
+            <div className="mb-6 md:mb-8 px-2 md:px-0">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1 md:mb-2">Dosya Yönetimi</h2>
+              <p className="text-gray-600 text-sm md:text-base">Şirket dosyalarını görüntüleyin ve indirin</p>
             </div>
 
             {/* Upload and Search Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 border border-gray-100">
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="flex-1 flex gap-4 items-center">
-                  <div className="relative flex-1 max-w-md">
+                <div className="flex-1 flex flex-col md:flex-row gap-3 md:gap-4 items-center w-full">
+                  <div className="relative flex-1 max-w-full md:max-w-md w-full">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       placeholder="Dosya ara..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 w-full"
                     />
                   </div>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto"
                   >
                     <option value="all">Tüm Kategoriler</option>
                     <option value="hakediş">Hakediş</option>
@@ -167,7 +167,7 @@ const Documents = () => {
                     <option value="diğer">Diğer</option>
                   </select>
                 </div>
-                <Button onClick={handleUpload} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleUpload} className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto mt-2 md:mt-0 flex justify-center">
                   <Upload className="w-4 h-4 mr-2" />
                   Dosya Yükle
                 </Button>
@@ -176,23 +176,23 @@ const Documents = () => {
 
             {/* Documents List */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">
+              <div className="p-4 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-4">
                   Dosyalar ({filteredDocuments.length})
                 </h3>
                 
                 <div className="space-y-4">
                   {filteredDocuments.map((doc) => (
                     <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <CardContent className="p-3 md:p-4">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
+                          <div className="flex items-center space-x-4 w-full md:w-auto">
+                            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                               <FileText className="w-6 h-6 text-blue-600" />
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-800">{doc.name}</h4>
-                              <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-gray-800 truncate">{doc.name}</h4>
+                              <div className="flex flex-wrap items-center space-x-4 text-xs md:text-sm text-gray-500 mt-1">
                                 <span className="flex items-center">
                                   <Calendar className="w-4 h-4 mr-1" />
                                   {new Date(doc.uploadDate).toLocaleDateString('tr-TR')}
@@ -202,11 +202,11 @@ const Documents = () => {
                                   {doc.uploadedBy}
                                 </span>
                                 <span>{doc.size}</span>
-                                <span>{doc.downloadCount} indirme</span>
+                                {/* <span>{doc.downloadCount} indirme</span> */}
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3">
+                          <div className="flex flex-wrap gap-2 md:gap-3 justify-start md:justify-end w-full md:w-auto">
                             <Badge className={getCategoryBadgeColor(doc.category)}>
                               {getCategoryLabel(doc.category)}
                             </Badge>
@@ -246,7 +246,8 @@ const Documents = () => {
             </div>
 
             {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-6 md:mt-8 px-2 md:px-0">
+              {/* Kartlar */}
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center">
