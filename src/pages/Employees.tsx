@@ -7,6 +7,7 @@ import { Search, Mail, Network, List } from "lucide-react";
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(""); 
   const [employeeList, setEmployeeList] = useState([
     {
       id: 1,
@@ -37,11 +38,17 @@ const Employees = () => {
     }
   ]);
 
-  const filteredEmployees = employeeList.filter(employee =>
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.position.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEmployees = employeeList.filter(employee => {
+    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.position.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDepartment = selectedDepartment === "" || 
+                             selectedDepartment === "Tüm Departmanlar" || 
+                             employee.department === selectedDepartment;
+    
+    return matchesSearch && matchesDepartment;
+  });
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -113,6 +120,18 @@ const Employees = () => {
                     className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+                <select 
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Tüm Departmanlar</option>
+                  <option value="IT">IT</option>
+                  <option value="İnsan Kaynakları">İnsan Kaynakları</option>
+                  <option value="Muhasebe">Muhasebe</option>
+                  <option value="Pazarlama">Pazarlama</option>
+                  <option value="Satış">Satış</option>
+                </select>
               </div>
             </div>
 

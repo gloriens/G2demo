@@ -7,90 +7,75 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { ArrowLeft, Calendar, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, Save } from "lucide-react";
+import { toast } from "../hooks/use-toast";
+import { useAppDispatch } from "../store/hooks";
+import { fetchEventById, updateEvent } from "../store/slices/eventsSlice";
 
 const EditEvent = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // URL'den etkinlik ID'sini al
+  const { id } = useParams();
+  const dispatch = useAppDispatch();
   
+  // Form state'ini veritabanı yapısına uygun hale getir
   const [formData, setFormData] = useState({
     title: "",
-    category: "",
-    date: "",
-    time: "",
+    description: "",
+    event_type: "", // category yerine event_type
+    max_participants: 0,
+    status: "Bekliyor",
+    start_time: "", // date ve time ayrı yerine tek alan
+    end_time: "",
     location: "",
-    status: "",
-    description: ""
+    is_approved: null as boolean | null,
+    created_by: 1,
+    cover_image: ""
   });
 
   const [loading, setLoading] = useState(true);
 
-  // Mock data - gerçek uygulamada API'den gelecek
-  const mockEvents = {
-    "1": {
-      id: 1,
-      title: "Şirket Pikniği",
-      category: "social",
-      date: "2024-07-15",
-      time: "14:00",
-      location: "Belgrad Ormanı",
-      status: "Aktif",
-      description: "Tüm çalışanlarımızın katılacağı yıllık şirket pikniği etkinliği. Aileler de davetli."
-    },
-    "2": {
-      id: 2,
-      title: "Yeni Çalışan Oryantasyonu",
-      category: "training",
-      date: "2024-07-20",
-      time: "09:00",
-      location: "Toplantı Salonu A",
-      status: "Onay Bekliyor",
-      description: "Yeni başlayan çalışanlar için oryantasyon programı."
-    },
-    "3": {
-      id: 3,
-      title: "Aylık Departman Toplantısı",
-      category: "meeting",
-      date: "2024-07-25",
-      time: "10:00",
-      location: "Zoom Meeting",
-      status: "Taslak",
-      description: "Aylık hedeflerin değerlendirildiği departman toplantısı."
-    }
-  };
-
-  // Etkinlik verilerini yükle
+  // API'den veri çekme
   useEffect(() => {
-    const loadEventData = () => {
-      setLoading(true);
-      
-      // Mock API çağrısı simülasyonu
-      setTimeout(() => {
-        const eventData = mockEvents[id as keyof typeof mockEvents];
+    const loadEventData = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        console.log('🔄 Etkinlik yükleniyor, ID:', id);
         
-        if (eventData) {
-          setFormData({
-            title: eventData.title,
-            category: eventData.category,
-            date: eventData.date,
-            time: eventData.time,
-            location: eventData.location,
-            status: eventData.status,
-            description: eventData.description
-          });
-        } else {
-          alert("Etkinlik bulunamadı!");
-          navigate("/events");
-        }
+        const result = await dispatch(fetchEventById(Number(id))).unwrap();
+        console.log('✅ Etkinlik yüklendi:', result);
         
+        // API'den gelen veriyi form state'ine uygun formata çevir
+        setFormData({
+          title: result.title || "",
+          description: result.description || "",
+          event_type: result.eventType || "",
+          max_participants: result.maxParticipants || 0,
+          status: result.status || "Bekliyor",
+          start_time: result.startTime?.slice(0, 16) || "", 
+          end_time: result.endTime?.slice(0, 16) || "",     
+          location: result.location || "",
+          is_approved: result.isApproved,
+          created_by: result.createdById || 1,
+          cover_image: result.coverImage || ""
+        });
+        
+      } catch (error: any) {
+        console.error('❌ Etkinlik yükleme hatası:', error);
+        toast({
+          title: "Hata",
+          description: "Etkinlik yüklenirken bir hata oluştu",
+          variant: "destructive"
+        });
+        navigate("/events");
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
 
-    if (id) {
-      loadEventData();
-    }
-  }, [id, navigate]);
+    loadEventData();
+  }, [id, dispatch, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -100,21 +85,56 @@ const EditEvent = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validasyonu
-    if (!formData.title || !formData.category || !formData.date || !formData.time || !formData.location) {
-      alert("Lütfen zorunlu alanları doldurun!");
-      return;
+    try {
+      if (!formData.title || !formData.event_type || !formData.start_time || !formData.end_time) {
+        toast({
+          title: "Hata",
+          description: "Lütfen tüm zorunlu alanları doldurun!",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Güncellenecek veriyi hazırla
+      const updateData = {
+        title: formData.title,
+        description: formData.description,
+        eventType: formData.event_type,
+        maxParticipants: Number(formData.max_participants),
+        status: "Bekliyor",
+        startTime: formData.start_time,
+        endTime: formData.end_time,
+        location: formData.location,
+         isApproved: false, 
+        createdById: formData.created_by,
+        coverImage: formData.cover_image || ""
+      };
+
+      console.log('🔄 Güncellenecek veri:', updateData);
+      
+      // updateEvent'i çağır
+      await dispatch(updateEvent({ id: Number(id), data: updateData })).unwrap();
+      
+      toast({
+        title: "Başarılı",
+        description: "Etkinlik başarıyla güncellendi!",
+        variant: "default"
+      });
+      
+      navigate("/events");
+      
+    } catch (error: any) {
+      console.error('❌ Güncelleme hatası:', error);
+      toast({
+        title: "Hata",
+        description: error.message || "Etkinlik güncellenirken bir hata oluştu",
+        variant: "destructive"
+      });
     }
-    
-    console.log("Güncellenen etkinlik verisi:", { id, ...formData });
-    alert("Etkinlik başarıyla güncellendi!");
-    navigate("/events");
   };
-
-
 
   if (loading) {
     return (
@@ -139,7 +159,6 @@ const EditEvent = () => {
         
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto">
-            {/* Geri dön linki */}
             <Link 
               to="/events"
               className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 font-medium"
@@ -148,29 +167,25 @@ const EditEvent = () => {
               Etkinliklere Geri Dön
             </Link>
 
-            {/* Ana form kartı */}
             <Card className="bg-white dark:bg-gray-800">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-6 h-6 text-blue-600" />
-                    <div>
-                      <CardTitle className="text-2xl text-gray-800 dark:text-white">
-                        Etkinliği Düzenle
-                      </CardTitle>
-                      <CardDescription className="text-gray-600 dark:text-gray-300">
-                        Etkinlik detaylarını düzenleyin
-                      </CardDescription>
-                    </div>
+                <div className="flex items-center space-x-3">
+                  <Calendar className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <CardTitle className="text-2xl text-gray-800 dark:text-white">
+                      Etkinliği Düzenle
+                    </CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-gray-300">
+                      Etkinlik detaylarını düzenleyin
+                    </CardDescription>
                   </div>
-    
                 </div>
               </CardHeader>
               
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
-                  {/* Temel Bilgiler Bölümü */}
+                  {/* Temel Bilgiler */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">
                       Temel Bilgiler
@@ -195,62 +210,64 @@ const EditEvent = () => {
 
                       {/* Kategori */}
                       <div className="space-y-2">
-                        <Label htmlFor="category" className="text-sm font-medium">
+                        <Label htmlFor="event_type" className="text-sm font-medium">
                           Kategori <span className="text-red-500">*</span>
                         </Label>
                         <select
-                          id="category"
-                          name="category"
-                          value={formData.category}
+                          id="event_type"
+                          name="event_type"
+                          value={formData.event_type}
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           required
                         >
                           <option value="">Kategori Seçin</option>
-                          <option value="meeting">Toplantı</option>
-                          <option value="training">Eğitim</option>
-                          <option value="social">Sosyal Etkinlik</option>
-                          <option value="company">Şirket Etkinliği</option>
-                          <option value="celebration">Kutlama</option>
-                          <option value="other">Diğer</option>
+                          <option value="Seminar">Seminer</option>       
+                          <option value="Workshop">Workshop</option>   
+                          <option value="Meeting">Toplantı</option>       
+                          <option value="Training">Eğitim</option>      
+                          <option value="Social">Sosyal Etkinlik</option> 
+                          <option value="Company">Şirket Etkinliği</option> 
+                          <option value="Celebration">Kutlama</option>    
+                          <option value="Other">Diğer</option>  
                         </select>
                       </div>
                     </div>
                   </div>
 
-                  {/* Tarih ve Saat Bölümü */}
+                  {/* Tarih ve Saat */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">
                       Tarih ve Saat
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Tarih */}
+                      {/* Başlangıç Zamanı */}
                       <div className="space-y-2">
-                        <Label htmlFor="date" className="text-sm font-medium">
-                          Tarih <span className="text-red-500">*</span>
+                        <Label htmlFor="start_time" className="text-sm font-medium">
+                          Başlangıç Zamanı <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          id="date"
-                          name="date"
-                          type="date"
-                          value={formData.date}
+                          id="start_time"
+                          name="start_time"
+                          type="datetime-local"
+                          value={formData.start_time}
                           onChange={handleInputChange}
                           required
                           className="w-full"
                         />
                       </div>
 
-                      {/* Saat */}
+                      {/* Bitiş Zamanı */}
                       <div className="space-y-2">
-                        <Label htmlFor="time" className="text-sm font-medium">
-                          Saat <span className="text-red-500">*</span>
+                        <Label htmlFor="end_time" className="text-sm font-medium">
+                          Bitiş Zamanı <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          id="time"
-                          name="time"
-                          type="time"
-                          value={formData.time}
+                          id="end_time"
+                          name="end_time"
+                          type="datetime-local"
+                          value={formData.end_time}
                           onChange={handleInputChange}
                           required
                           className="w-full"
@@ -259,36 +276,55 @@ const EditEvent = () => {
                     </div>
                   </div>
 
-                  {/* Konum Bölümü */}
+                  {/* Konum ve Katılımcı */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">
-                      Konum
+                      Konum ve Kapasite
                     </h3>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="location" className="text-sm font-medium">
-                        Konum <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="location"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        placeholder="Etkinlik konumunu girin"
-                        required
-                        className="w-full"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Konum */}
+                      <div className="space-y-2">
+                        <Label htmlFor="location" className="text-sm font-medium">
+                          Konum <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="location"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          placeholder="Etkinlik konumunu girin"
+                          required
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Katılımcı Kapasitesi */}
+                      <div className="space-y-2">
+                        <Label htmlFor="max_participants" className="text-sm font-medium">
+                          Maksimum Katılımcı
+                        </Label>
+                        <Input
+                          id="max_participants"
+                          name="max_participants"
+                          type="number"
+                          value={formData.max_participants}
+                          onChange={handleInputChange}
+                          min="0"
+                          className="w-full"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Durum ve Açıklama Bölümü */}
+                  {/* Durum ve Açıklama */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">
-                      Durum ve Açıklama
+                     Açıklama Bilgisi
                     </h3>
                     
                     {/* Durum */}
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="status" className="text-sm font-medium">
                         Durum
                       </Label>
@@ -299,12 +335,12 @@ const EditEvent = () => {
                         onChange={handleInputChange}
                         className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       >
-                        <option value="Onay Bekliyor">Onay Bekliyor</option>
-                        <option value="Taslak">Taslak</option>
-                        <option value="Aktif">Aktif</option>
-                        <option value="İptal Edildi">İptal Edildi</option>
+                        <option value="Pending">Onay Bekliyor</option>
+                        <option value="Approved">Onaylandı</option>
+                        <option value="Rejected">Reddedildi</option>
+                        <option value="Cancelled">İptal Edildi</option>
                       </select>
-                    </div>
+                    </div> */}
 
                     {/* Açıklama */}
                     <div className="space-y-2">

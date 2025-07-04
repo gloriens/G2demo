@@ -14,7 +14,7 @@ interface Event {
   start_time: string;
   end_time: string;
   location: string;
-  is_approved: boolean;
+  isApproved: boolean;
   created_by: number;
   created_at?: string;
 }
