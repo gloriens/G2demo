@@ -1,54 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import { Search, Mail, Network, List } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchEmployees, clearError } from "@/store/slices/employeeSlice";
 
 const Employees = () => {
+  const { toast } = useToast();
+  const dispatch = useAppDispatch();
+  
+  // ✅ Redux state'den veri çek
+  const { employees, loading, error } = useAppSelector((state) => state.employees);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState(""); 
-  const [employeeList, setEmployeeList] = useState([
-    {
-      id: 1,
-      name: "Ahmet Yılmaz",
-      position: "Senior Developer",
-      department: "IT",
-      email: "ahmet.yilmaz@sirket.com",
-      phone: "+90 555 123 4567",
-      startDate: "15.03.2022",
-    },
-    {
-      id: 2,
-      name: "Ayşe Demir",
-      position: "İK Uzmanı",
-      department: "İnsan Kaynakları",
-      email: "ayse.demir@sirket.com",
-      phone: "+90 555 234 5678",
-      startDate: "01.06.2021",
-    },
-    {
-      id: 3,
-      name: "Mehmet Kaya",
-      position: "Muhasebe Uzmanı",
-      department: "Muhasebe",
-      email: "mehmet.kaya@sirket.com",
-      phone: "+90 555 345 6789",
-      startDate: "10.09.2020",
-    }
-  ]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
-  const filteredEmployees = employeeList.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.position.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDepartment = selectedDepartment === "" || 
-                             selectedDepartment === "Tüm Departmanlar" || 
-                             employee.department === selectedDepartment;
-    
+  // ✅ Component mount olduğunda verileri çek
+  useEffect(() => {
+    dispatch(fetchEmployees());
+  }, [dispatch]);
+
+  // ✅ Error handling
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Hata",
+        description: error,
+        variant: "destructive"
+      });
+      dispatch(clearError());
+    }
+  }, [error, toast, dispatch]);
+
+  // Filtreleme fonksiyonu - backend formatına uygun
+  const filteredEmployees = employees.filter(employee => {
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    const department = (employee.department || '').toLowerCase();
+    const position = (employee.position || '').toLowerCase();
+    const jobTitle = (employee.jobTitle || '').toLowerCase();
+
+    const matchesSearch =
+      fullName.includes(searchTerm.toLowerCase()) ||
+      department.includes(searchTerm.toLowerCase()) ||
+      position.includes(searchTerm.toLowerCase()) ||
+      jobTitle.includes(searchTerm.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDepartment =
+      selectedDepartment === "" ||
+      selectedDepartment === "Tüm Departmanlar" ||
+      employee.departmentName === selectedDepartment;
+
     return matchesSearch && matchesDepartment;
   });
+
+  // Unique departmanlar
+  const uniqueDepartments = [
+    ...new Set(employees.map(emp => emp.departmentName).filter(Boolean))
+  ];
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -73,39 +85,17 @@ const Employees = () => {
                   <Network className="h-5 w-5" />
                   <span>Organizasyon Şeması</span>
                 </Link>
-
-                {/*
-                <button
-                  onClick={() => setIsFormOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>Yeni Çalışan</span>
-                </button>
-                */}
               </div>
             </div>
 
-            {/* Yeni Çalışan Formu */}
-            {/*
-            {isFormOpen && (
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-blue-200">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Yeni Çalışan Ekle</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input className="border p-3 rounded" type="text" placeholder="Ad Soyad" />
-                  <input className="border p-3 rounded" type="text" placeholder="Pozisyon" />
-                  <input className="border p-3 rounded" type="text" placeholder="Departman" />
-                  <input className="border p-3 rounded" type="email" placeholder="Email" />
-                  <input className="border p-3 rounded" type="tel" placeholder="Telefon" />
-                  <input className="border p-3 rounded" type="date" placeholder="gg.aa.yyyy" />
-                </div>
-                <div className="mt-4 flex space-x-3">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Kaydet</button>
-                  <button className="bg-gray-300 px-4 py-2 rounded">İptal</button>
+            {/* ✅ Loading State */}
+            {loading && (
+              <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
+                <div className="text-center">
+                  <div className="text-gray-600">Çalışanlar yükleniyor...</div>
                 </div>
               </div>
             )}
-            */}
 
             {/* Arama Kutusu */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
@@ -126,20 +116,25 @@ const Employees = () => {
                   className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Tüm Departmanlar</option>
-                  <option value="IT">IT</option>
-                  <option value="İnsan Kaynakları">İnsan Kaynakları</option>
-                  <option value="Muhasebe">Muhasebe</option>
-                  <option value="Pazarlama">Pazarlama</option>
-                  <option value="Satış">Satış</option>
+                  {/* ✅ Backend'den gelen departmanları listele */}
+                  {uniqueDepartments.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
             {/* Çalışan Listesi */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center space-x-2">
-                <List className="h-5 w-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-800">Çalışan Listesi</h3>
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <List className="h-5 w-5 text-gray-600" />
+                  <h3 className="text-lg font-semibold text-gray-800">Çalışan Listesi</h3>
+                </div>
+                {/* ✅ Toplam sayısını göster */}
+                <div className="text-sm text-gray-500">
+                  Toplam: {filteredEmployees.length} çalışan
+                </div>
               </div>
 
               <div className="overflow-x-auto">
@@ -151,42 +146,40 @@ const Employees = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departman</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İletişim</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlangıç</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredEmployees.map((employee) => (
-                      <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                              <span className="text-white font-medium">
-                                {employee.name.split(' ').map(n => n[0]).join('')}
-                              </span>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{employee.name}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.position}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.department}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div className="space-y-1">
+                    {/* ✅ Redux'dan gelen verilerle render et */}
+                    {filteredEmployees.map((employee) => {
+                      const fullName = `${employee.firstName} ${employee.lastName}`;
+                      const initials = `${employee.firstName[0] ?? ''}${employee.lastName[0] ?? ''}`;
+                      return (
+                        <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <Mail className="h-3 w-3 text-gray-400 mr-1" />
-                              <span className="text-xs">{employee.email}</span>
+                              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-white font-medium">{initials}</span>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">{fullName}</div>
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">{employee.phone}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.startDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-blue-600 hover:text-blue-900 mr-3">Düzenle</button>
-                          <button className="text-red-600 hover:text-red-900">Sil</button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.jobTitle || 'Belirtilmemiş'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.departmentName || 'Belirtilmemiş'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div className="space-y-1">
+                              <div className="flex items-center">
+                                <Mail className="h-3 w-3 text-gray-400 mr-1" />
+                                <span className="text-xs">{employee.email}</span>
+                              </div>
+                              <div className="text-xs text-gray-500">{employee.phoneNumber}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.dateOfJoining || 'Belirtilmemiş'}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
