@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
@@ -105,6 +104,7 @@ const Calendar = () => {
                   <h2 className="text-3xl font-bold text-gray-800 mb-2">Takvim</h2>
                   <p className="text-gray-600">Toplantılar ve etkinlikler</p>
                 </div>
+                {/*
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2 bg-white rounded-lg p-1 shadow-sm border">
                     <button 
@@ -137,6 +137,7 @@ const Calendar = () => {
                     <span>Yeni Etkinlik</span>
                   </button>
                 </div>
+                */}
               </div>
             </div>
 
@@ -224,7 +225,7 @@ const Calendar = () => {
                           <div className="space-y-1 mt-1">
                             <div className="flex items-center text-xs text-gray-600">
                               <CalendarIcon className="h-3 w-3 mr-1" />
-                              <span>{event.date}</span>
+                              <span>{new Date(event.date).toLocaleDateString('tr-TR')}</span>
                             </div>
                             <div className="flex items-center text-xs text-gray-600">
                               <Clock className="h-3 w-3 mr-1" />
