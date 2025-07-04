@@ -8,19 +8,26 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { ArrowLeft, Calendar, Plus } from "lucide-react";
-
+import { toast } from "../hooks/use-toast";
+import { useAppDispatch } from "../store/hooks"
+import { createEvent } from "../store/slices/eventsSlice";
 const AddEvent = () => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    date: "",
-    time: "",
-    location: "",
-    status: "Onay Bekliyor",
-    description: ""
-  });
+const [formData, setFormData] = useState({
+  title: "",
+  description: "",
+  event_type: "",        // Değişti
+  max_participants: 0,   // Değişti
+  status: "Bekliyor",
+
+  start_time: "",        // Değişti
+  end_time: "",          // Değişti
+  location: "",
+  is_approved: false,    // Değişti
+  createdById: 1         // Varsayılan değer
+});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -30,18 +37,48 @@ const AddEvent = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validasyonu
-    if (!formData.title || !formData.category || !formData.date || !formData.time || !formData.location) {
-      alert("Lütfen zorunlu alanları doldurun!");
-      return;
+    try {
+      if (!formData.title || !formData.event_type || !formData.start_time || !formData.end_time) {
+        throw new Error('Lütfen tüm zorunlu alanları doldurun');
+      }
+
+      const eventData = {
+        title: formData.title,
+        description: formData.description || "",
+        eventType: formData.event_type,
+        maxParticipants: Number(formData.max_participants),
+        status: formData.status,
+        startTime: formData.start_time,
+        endTime: formData.end_time,
+        location: formData.location || "Bornova, İzmir",
+        isApproved: false,
+        createdById : 1, // Şimdilik sabit değer
+      };
+
+      console.log('🔄 Gönderilecek veri:', eventData);
+      
+      const result = await dispatch(createEvent(eventData)).unwrap();
+      console.log('✅ Sonuç:', result);
+      
+      toast({
+        title: "Başarılı",
+        description: "Etkinlik başarıyla oluşturuldu!",
+        variant: "default"
+      });
+      
+      navigate("/events");
+      
+    } catch (error: any) {
+      console.error('❌ Hata:', error);
+      toast({
+        title: "Hata",
+        description: error.response?.data?.message || "Etkinlik oluşturulamadı",
+        variant: "destructive"
+      });
     }
-    
-    console.log("Yeni etkinlik verisi:", formData);
-    alert("Etkinlik başarıyla oluşturuldu!");
-    navigate("/events");
   };
 
   return (
@@ -106,24 +143,26 @@ const AddEvent = () => {
 
                       {/* Kategori */}
                       <div className="space-y-2">
-                        <Label htmlFor="category" className="text-sm font-medium">
+                        <Label htmlFor="event_type" className="text-sm font-medium">
                           Kategori <span className="text-red-500">*</span>
                         </Label>
                         <select
-                          id="category"
-                          name="category"
-                          value={formData.category}
+                          id="event_type"
+                          name="event_type"
+                          value={formData.event_type}
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           required
                         >
                           <option value="">Kategori Seçin</option>
-                          <option value="meeting">Toplantı</option>
-                          <option value="training">Eğitim</option>
-                          <option value="social">Sosyal Etkinlik</option>
-                          <option value="company">Şirket Etkinliği</option>
-                          <option value="celebration">Kutlama</option>
-                          <option value="other">Diğer</option>
+                          <option value="Seminar">Seminer</option>       
+                          <option value="Workshop">Workshop</option>   
+                          <option value="Meeting">Toplantı</option>       
+                          <option value="Training">Eğitim</option>      
+                          <option value="Social">Sosyal Etkinlik</option> 
+                          <option value="Company">Şirket Etkinliği</option> 
+                          <option value="Celebration">Kutlama</option>    
+                          <option value="Other">Diğer</option>
                         </select>
                       </div>
                     </div>
@@ -136,33 +175,32 @@ const AddEvent = () => {
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Tarih */}
+                      {/* Başlangıç Zamanı */}
                       <div className="space-y-2">
-                        <Label htmlFor="date" className="text-sm font-medium">
-                          Tarih <span className="text-red-500">*</span>
+                        <Label htmlFor="start_time" className="text-sm font-medium">
+                          Başlangıç Zamanı <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          id="date"
-                          name="date"
-                          type="date"
-                          value={formData.date}
+                          id="start_time"
+                          name="start_time"
+                          type="datetime-local" // datetime-local kullan
+                          value={formData.start_time}
                           onChange={handleInputChange}
                           required
                           className="w-full"
-                          placeholder="gg.aa.yyyy"
                         />
                       </div>
 
-                      {/* Saat */}
+                      {/* Bitiş Zamanı */}
                       <div className="space-y-2">
-                        <Label htmlFor="time" className="text-sm font-medium">
-                          Saat <span className="text-red-500">*</span>
+                        <Label htmlFor="end_time" className="text-sm font-medium">
+                          Bitiş Zamanı <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          id="time"
-                          name="time"
-                          type="time"
-                          value={formData.time}
+                          id="end_time"
+                          name="end_time"
+                          type="datetime-local" // datetime-local kullan
+                          value={formData.end_time}
                           onChange={handleInputChange}
                           required
                           className="w-full"
@@ -174,7 +212,7 @@ const AddEvent = () => {
                   {/* Konum Bölümü */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">
-                      Konum
+                      Konum Bilgisi
                     </h3>
                     
                     <div className="space-y-2">
@@ -190,17 +228,46 @@ const AddEvent = () => {
                         required
                         className="w-full"
                       />
+                      
                     </div>
+                    <div>
+                      <Label htmlFor="max_participants" className="text-sm font-medium">
+                        Katılımcı Kapasitesi <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="max_participants"
+                        name="max_participants"
+                        type="number"
+                        value={formData.max_participants}
+                        onChange={handleInputChange}
+                        onKeyDown={(e) => {
+                          if (e.key === 'e' || e.key === 'E') {
+                            e.preventDefault();
+                          }
+                        }}
+                        onPaste={(e) => {
+                          e.preventDefault(); 
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault(); 
+                        }}
+                        placeholder="Örn: 100"
+                        min="0"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+      
                   </div>
 
                   {/* Durum ve Açıklama Bölümü */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b pb-2">
-                      Durum ve Açıklama
+                       Açıklama Bilgisi
                     </h3>
                     
                     {/* Durum */}
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="status" className="text-sm font-medium">
                         Durum
                       </Label>
@@ -216,8 +283,8 @@ const AddEvent = () => {
                         <option value="Aktif">Aktif</option>
                         <option value="İptal Edildi">İptal Edildi</option>
                       </select>
-                    </div>
-
+                    </div> */}
+    
                     {/* Açıklama */}
                     <div className="space-y-2">
                       <Label htmlFor="description" className="text-sm font-medium">
