@@ -20,6 +20,12 @@ import Documents from "./pages/Documents";
 import NewsDetail from "./pages/NewsDetail";
 import AddEvent from "./pages/AddEvent";
 import EditEvent from "./pages/EditEvent.tsx";
+import Announcements from "./pages/Announcements"; // bu satırı en üste ekle
+
+
+
+
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -44,6 +50,7 @@ const App = () => (
           <Route path="/leave-management" element={<LeaveManagement />} />
           <Route path="/my-leave-requests" element={<MyLeaveRequests />} />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/announcements" element={<Announcements />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

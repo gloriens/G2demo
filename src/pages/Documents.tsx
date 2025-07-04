@@ -261,7 +261,8 @@ const Documents = () => {
                   </div>
                 </CardContent>
               </Card>
-              
+
+              {/*
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center">
@@ -270,13 +271,14 @@ const Documents = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-gray-800">
-                        {mockDocuments.reduce((sum, doc) => sum + doc.downloadCount, 0)}
+                        {mockDocuments.reduce((sum, doc) => sum + (doc.downloadCount ?? 0), 0)}
                       </p>
                       <p className="text-sm text-gray-600">Toplam İndirme</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+              */}
 
               <Card>
                 <CardContent className="p-4">
