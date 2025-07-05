@@ -94,13 +94,10 @@ export const createNews = createAsyncThunk(
       // Backend'in beklediği field isimleri
       formData.append('title', newsData.data.title);
       formData.append('content', newsData.data.content);
-      formData.append('createdBy', newsData.data.author);
+      formData.append('createdBy',"1");
       formData.append('newsType', newsData.data.category);
-      
-      // Resim dosyasını ekle
       if (newsData.imageFile) {
-        formData.append('file', newsData.imageFile); // Backend'de @RequestParam("file") varsa
-        console.log('📎 Image file added:', newsData.imageFile.name);
+        formData.append('file', newsData.imageFile);
       }
       
       // ✅ FormData için özel axios request
@@ -128,21 +125,25 @@ export const updateNews = createAsyncThunk(
     try {
       console.log('🔄 Updating news:', { id, data });
       
-      let payload = {
-        title: data.title,
-        content: data.content,
-        createdBy: data.author,
-        newsType: data.category,
-      };
+      // ✅ FormData oluştur (create gibi)
+      const formData = new FormData();
+      formData.append('title', data.title || '');
+      formData.append('content', data.content || '');
+      formData.append('newsType', data.category || '');
       
-      // Yeni resim varsa Base64'e çevir
       if (imageFile) {
-        const base64Image = await fileToBase64(imageFile);
-        payload.coverImage = base64Image;
-        console.log('📎 New image converted to base64, length:', base64Image.length);
+        formData.append('file', imageFile);
+        console.log('📎 New image attached:', imageFile.name);
       }
       
-      const response = await api.put<News>(`/news/${id}`, payload);
+      // ✅ FormData ile axios request
+      const response = await axios.put<News>(`http://localhost:8080/news/${id}`, formData, {
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
       console.log('✅ News updated:', response.data);
       return response.data;
     } catch (error: any) {

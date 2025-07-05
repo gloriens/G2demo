@@ -11,16 +11,16 @@ import { fetchNews, createNews, updateNews, deleteNews, clearError, base64ToImag
 const News = () => {
   const { toast } = useToast();
   const dispatch = useAppDispatch();
-  
+
   const { news, loading, error } = useAppSelector((state) => state.news);
-  
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [newsToDelete, setNewsToDelete] = useState<number | null>(null);
   const [editingNews, setEditingNews] = useState<number | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // ✅ Dosya state'i
-  const [imagePreview, setImagePreview] = useState<string | null>(null); // ✅ Önizleme
-  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     title: "",
     category: "Duyuru",
@@ -52,33 +52,10 @@ const News = () => {
     }));
   };
 
-  // ✅ Dosya seçimi - byte array için
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Dosya tipini kontrol et
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Ha ta",
-          description: "Lütfen sadece resim dosyası seçin.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Dosya boyutunu kontrol et (örnek: 5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "Hata",
-          description: "Resim dosyası 5MB'dan küçük olmalıdır.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
       setSelectedFile(file);
-      
-      // Önizleme için URL oluştur
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
@@ -87,38 +64,34 @@ const News = () => {
     }
   };
 
-  // ✅ Form submit - dosya ile birlikte
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       if (editingNews) {
-        // Düzenleme işlemi
-        await dispatch(updateNews({ 
-          id: editingNews, 
+        await dispatch(updateNews({
+          id: editingNews,
           data: formData,
           imageFile: selectedFile || undefined
         })).unwrap();
-        
         toast({
-          title: "Başarılı",
+          title: "Haber Güncellendi",
           description: "Haber başarıyla güncellendi.",
         });
         setEditingNews(null);
       } else {
-        // Yeni haber ekleme
-        await dispatch(createNews({ 
+        // Debug için - formData bir obje, FormData değil
+        console.log('📎 Form Data:', formData);
+        console.log('📎 Selected File:', selectedFile);
+        
+        await dispatch(createNews({
           data: formData,
           imageFile: selectedFile || undefined
         })).unwrap();
-        
         toast({
-          title: "Başarılı",
+          title: "Haber Yayınlandı",
           description: "Yeni haber başarıyla yayınlandı.",
         });
       }
-      
-      // Form sıfırlama
       setFormData({
         title: "",
         category: "Duyuru",
@@ -129,7 +102,6 @@ const News = () => {
       setSelectedFile(null);
       setImagePreview(null);
       setShowAddForm(false);
-      
     } catch (error: any) {
       toast({
         title: "Hata",
@@ -142,19 +114,17 @@ const News = () => {
   const handleEdit = (newsItem: any) => {
     setFormData({
       title: newsItem.title,
-      category: newsItem.category || newsItem.newsType, // ✅ Backend'den newsType geliyor olabilir
-      author: newsItem.author || newsItem.createdBy,    // ✅ Backend'den createdBy geliyor olabilir
-      duration: newsItem.duration || "1 hafta",        // ✅ Backend'de duration yoksa default
+      category: newsItem.category || newsItem.newsType,
+      author: newsItem.author || newsItem.createdBy,
+      duration: newsItem.duration || "1 hafta",
       content: newsItem.content
     });
-    
-    // ✅ Base64 resmi önizleme olarak göster
     if (newsItem.image || newsItem.coverImage) {
       const base64Image = newsItem.image || newsItem.coverImage;
-      const imageUrl = base64ToImageUrl(base64Image);
-      setImagePreview(imageUrl);
+      setImagePreview(base64ToImageUrl(base64Image));
+    } else {
+      setImagePreview(null);
     }
-    
     setEditingNews(newsItem.id);
     setShowAddForm(true);
   };
@@ -168,9 +138,8 @@ const News = () => {
     if (newsToDelete) {
       try {
         await dispatch(deleteNews(newsToDelete)).unwrap();
-        
         toast({
-          title: "Başarılı",
+          title: "Haber Silindi",
           description: "Haber başarıyla silindi.",
           variant: "destructive"
         });
@@ -210,13 +179,44 @@ const News = () => {
     }
   };
 
+  // Son 7 günde eklenen haberleri say
+  const last7Days = new Date();
+  last7Days.setDate(last7Days.getDate() - 7);
+
+  const newsThisWeek = news.filter(item => {
+    if (!item.createdAt) return false;
+    return new Date(item.createdAt) >= last7Days;
+  }).length;
+
+  // Bu ayın başlangıcını bul
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  // Bu ay eklenen haber sayısı
+  const newsThisMonth = news.filter(item => {
+    if (!item.createdAt) return false;
+    return new Date(item.createdAt) >= startOfMonth;
+  }).length;
+
+  // Tarih formatlama fonksiyonu
+  const formatTurkishDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-8">
@@ -254,7 +254,6 @@ const News = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                     />
                   </div>
-                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Kategori *</label>
@@ -282,7 +281,6 @@ const News = () => {
                       />
                     </div>
                   </div>
-                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Haberin Kalma Süresi</label>
                     <select 
@@ -299,8 +297,6 @@ const News = () => {
                       <option value="Süresiz">Süresiz</option>
                     </select>
                   </div>
-                  
-                  {/* ✅ Resim upload alanı */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Kapak Resmi</label>
                     <input 
@@ -309,9 +305,7 @@ const News = () => {
                       onChange={handleFileChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
-                    <p className="text-sm text-gray-500 mt-1">PNG, JPG veya JPEG formatında resim yükleyebilirsiniz. (Max: 5MB)</p>
-                    
-                    {/* ✅ Resim önizlemesi */}
+                    <p className="text-sm text-gray-500 mt-1">PNG, JPG veya JPEG formatında resim yükleyebilirsiniz.</p>
                     {imagePreview && (
                       <div className="mt-3">
                         <img 
@@ -322,7 +316,6 @@ const News = () => {
                       </div>
                     )}
                   </div>
-                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">İçerik *</label>
                     <textarea 
@@ -334,7 +327,6 @@ const News = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     ></textarea>
                   </div>
-                  
                   <div className="flex justify-end space-x-4 mt-4">
                     <button 
                       type="button"
@@ -355,63 +347,93 @@ const News = () => {
               </div>
             )}
 
-            {/* Loading State */}
-            {loading && (
-              <div className="text-center py-8">
-                <div className="text-gray-600">Yükleniyor...</div>
+            {/* News Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-blue-100 rounded-full">
+                    <Bell className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-800">{news.length}</p>
+                    <p className="text-gray-600 text-sm">Toplam Haber</p>
+                  </div>
+                </div>
               </div>
-            )}
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-green-100 rounded-full">
+                    <Clock className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-800">{newsThisWeek}</p>
+                    <p className="text-gray-600 text-sm">Bu Hafta</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-orange-100 rounded-full">
+                    <Clock className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-800">{newsThisMonth}</p>
+                    <p className="text-gray-600 text-sm">Bu Ay</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* News List */}
+            {/* All News */}
             <div>
               <h3 className="text-xl font-bold text-gray-800 mb-4">Tüm Haberler</h3>
               <div className="space-y-6">
                 {news.map((item) => (
                   <div key={item.id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
                     <div className="flex">
-                      {/* ✅ Base64'den resim gösterimi */}
+                      {/* Base64 veya URL'den resim gösterimi */}
                       {(item.image || item.coverImage) && (
                         <div className="w-48 h-32 flex-shrink-0">
                           <img 
-                            src={base64ToImageUrl(item.image || item.coverImage)} 
+                            src={item.image ? item.image : base64ToImageUrl(item.coverImage)} 
                             alt={item.title}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.error('Image load error:', e);
-                              e.currentTarget.style.display = 'none';
-                            }}
                           />
                         </div>
                       )}
-                      
                       <div className="flex-1 p-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-3">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
-                                {item.category}
+                                {item.newsType}
                               </span>
                               <span className="text-xs text-gray-500">
                                 Süre: {item.duration}
                               </span>
                             </div>
-                            
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">
-                              {item.title}
-                            </h3>
+                            <Link to={`/news/${item.id}`}>
+                              <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-blue-600 transition-colors cursor-pointer">
+                                {item.title}
+                              </h3>
+                            </Link>
                             <p className="text-gray-600 mb-4">{item.content}</p>
-                            
                             <div className="flex items-center justify-between text-sm text-gray-500">
                               <div className="flex items-center space-x-4">
-                                <span className="font-medium">{item.author}</span>
+                                <span className="font-medium">{item.author || item.createdBy}</span>
                                 <div className="flex items-center">
                                   <Clock className="h-4 w-4 mr-1" />
-                                  <span>{item.date}</span>
+                                  <span>{formatTurkishDate(item.createdAt)}</span>
                                 </div>
                               </div>
+                              <Link 
+                                to={`/news/${item.id}`}
+                                className="text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Detayını Oku
+                              </Link>
                             </div>
                           </div>
-                          
                           <div className="ml-4 flex space-x-2">
                             <button 
                               onClick={() => handleEdit(item)}
@@ -440,7 +462,6 @@ const News = () => {
           </div>
         </main>
       </div>
-
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
