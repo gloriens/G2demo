@@ -29,7 +29,7 @@ const Dashboard = () => {
             </div>
 
             {/* Detailed Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <StatsCard
                 title="Toplam Çalışan"
                 value={145}
@@ -68,10 +68,10 @@ const Dashboard = () => {
                 icon={<Coffee className="h-6 w-6 text-white" />}
                 color="bg-pink-500"
               />
-            </div>
+            </div> */}
 
             {/* Department Distribution */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-800 mb-6">Departman Dağılımı</h3>
                 <div className="space-y-4">
@@ -88,9 +88,9 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              {/* <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-800 mb-6">Bu Ay Öne Çıkanlar</h3>
                 <div className="space-y-4">
                   <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
@@ -117,7 +117,7 @@ const Dashboard = () => {
                     <p className="text-sm text-purple-700">%85 katılım oranı ile rekor kırdık</p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Recent Activities */}
