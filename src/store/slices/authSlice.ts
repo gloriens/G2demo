@@ -74,9 +74,22 @@ export const loginUser = createAsyncThunk(
     try {
       console.log('🔄 Logging in user:', credentials.email);
       
-      const response = await axios.post('http://localhost:8080/auth/login', credentials);
+      const response = await axios.post('/api/auth/login', credentials);
       
-      const { token, user, userType } = response.data;
+      // ✅ Handle new response format
+      const { token, userId, email, role, firstName, lastName } = response.data;
+      
+      // ✅ Map response to user object
+      const user: User = {
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        role
+      };
+      
+      // ✅ Map role to userType
+      const userType: 'employee' | 'hr' = role === 'EMPLOYEE' ? 'employee' : 'hr';
       
       // ✅ Güvenli storage'a kaydet
       secureStorage.setItem('token', token);
@@ -108,7 +121,7 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // ✅ Backend'e logout request
-      await axios.post('http://localhost:8080/auth/logout');
+      await axios.post('/api/auth/logout');
       
       // ✅ Storage'ı temizle
       secureStorage.removeItem('token');
@@ -145,7 +158,7 @@ export const verifyToken = createAsyncThunk(
       }
       
       // ✅ Backend'te token verify
-      const response = await axios.get('http://localhost:8080/auth/verify', {
+      const response = await axios.get('/api/auth/verify', {
         headers: { Authorization: `Bearer ${token}` }
       });
       

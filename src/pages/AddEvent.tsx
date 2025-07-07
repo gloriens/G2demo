@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
@@ -9,11 +9,62 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { ArrowLeft, Calendar, Plus } from "lucide-react";
 import { toast } from "../hooks/use-toast";
-import { useAppDispatch } from "../store/hooks"
+import { useAppDispatch, useAppSelector } from "../store/hooks"
 import { createEvent } from "../store/slices/eventsSlice";
+
 const AddEvent = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const userType = useAppSelector((state) => state.auth.userType);
+  
+  // ✅ Route guard - redirect if not HR
+  useEffect(() => {
+    if (userType && userType !== 'hr') {
+      console.warn('⚠️ Access denied: Only HR can create events');
+      toast({
+        title: "Erişim Reddedildi",
+        description: "Sadece İK personeli etkinlik oluşturabilir",
+        variant: "destructive"
+      });
+      navigate('/events');
+    }
+  }, [userType, navigate]);
+  
+  // Show loading if user type is not yet determined
+  if (!userType) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="text-gray-600">Yetki kontrolü yapılıyor...</div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+  
+  // Deny access for non-HR users
+  if (userType !== 'hr') {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">Erişim Reddedildi</h2>
+              <p className="text-gray-600 mb-4">Sadece İK personeli etkinlik oluşturabilir</p>
+              <Link to="/events" className="text-blue-600 hover:text-blue-800">
+                Etkinlikler sayfasına dön
+              </Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
   
 const [formData, setFormData] = useState({
   title: "",
@@ -59,6 +110,17 @@ const [formData, setFormData] = useState({
       };
 
       console.log('🔄 Gönderilecek veri:', eventData);
+      console.log('🔑 Current user info:', {
+        token: sessionStorage.getItem('token')?.substring(0, 30) + '...',
+        user: JSON.parse(sessionStorage.getItem('user') || '{}'),
+        userType: sessionStorage.getItem('userType')
+      });
+      
+      // ✅ Debug: Let's see what headers are being sent
+      console.log('🔍 Debugging request details:');
+      console.log('- Token exists:', !!sessionStorage.getItem('token'));
+      console.log('- User role from storage:', JSON.parse(sessionStorage.getItem('user') || '{}').role);
+      console.log('- UserType from storage:', sessionStorage.getItem('userType'));
       
       const result = await dispatch(createEvent(eventData)).unwrap();
       console.log('✅ Sonuç:', result);
@@ -76,6 +138,65 @@ const [formData, setFormData] = useState({
       toast({
         title: "Hata",
         description: error.response?.data?.message || "Etkinlik oluşturulamadı",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // ✅ Test function to debug backend expectations
+  const testBackendPermissions = async () => {
+    try {
+      console.log('🧪 Testing backend permissions...');
+      
+      // Test with snake_case (what backend might expect)
+      const testDataSnakeCase = {
+        title: "Test Event",
+        description: "Test Description", 
+        event_type: "Meeting",
+        max_participants: 10,
+        status: "Bekliyor",
+        start_time: "2024-01-01T10:00",
+        end_time: "2024-01-01T11:00",
+        location: "Test Location",
+        is_approved: false,
+        created_by: 1
+      };
+      
+      console.log('🔍 Test data (snake_case):', testDataSnakeCase);
+      
+      // Make direct API call to test
+      const token = sessionStorage.getItem('token');
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(testDataSnakeCase)
+      });
+      
+      const responseData = await response.text();
+      console.log('🔍 Raw response:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: responseData
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Test Başarılı",
+          description: "Backend ile bağlantı çalışıyor!",
+          variant: "default"
+        });
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Test failed:', error);
+      toast({
+        title: "Test Başarısız",
+        description: error.message,
         variant: "destructive"
       });
     }
@@ -303,16 +424,28 @@ const [formData, setFormData] = useState({
                   </div>
 
                   {/* Form Butonları */}
-                  <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <Link to="/events">
-                      <Button variant="outline" type="button">
-                        İptal
-                      </Button>
-                    </Link>
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Etkinlik Oluştur
+                  <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+                    {/* Test Button */}
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={testBackendPermissions}
+                      className="bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                    >
+                      🧪 Test Backend
                     </Button>
+                    
+                    <div className="flex space-x-4">
+                      <Link to="/events">
+                        <Button variant="outline" type="button">
+                          İptal
+                        </Button>
+                      </Link>
+                      <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Etkinlik Oluştur
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </CardContent>

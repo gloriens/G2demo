@@ -21,9 +21,19 @@ const Events = () => {
   const { toast } = useToast();
   
   // Redux state selectors
-  const events = useAppSelector((state) => state.events.events);
+  const events = useAppSelector((state) => state.events.events) || []; // Ensure it's always an array
   const loading = useAppSelector((state) => state.events.loading);
   const error = useAppSelector((state) => state.events.error);
+  const userType = useAppSelector((state) => state.auth.userType); // Get user type for permissions
+
+  console.log('🔍 Events component render:', { 
+    eventsLength: events.length, 
+    loading, 
+    error,
+    userType,
+    eventsType: typeof events,
+    isArray: Array.isArray(events)
+  });
 
   // Local state
   const [activeTab, setActiveTab] = useState("all");
@@ -32,12 +42,24 @@ const Events = () => {
   // Component mount - veri çek
   useEffect(() => {
     console.log('🔄 Events component mounted, fetching data...');
+    console.log('🔍 Current events state:', { events, loading, error });
     dispatch(fetchEvents());
   }, [dispatch]);
+
+  // Debug state changes
+  useEffect(() => {
+    console.log('🔍 Events state changed:', { 
+      eventsLength: events?.length || 0, 
+      loading, 
+      error,
+      eventsArray: events 
+    });
+  }, [events, loading, error]);
 
   // Error handling
   useEffect(() => {
     if (error) {
+      console.error('❌ Events component error:', error);
       toast({
         title: "Hata",
         description: error,
@@ -208,8 +230,11 @@ const Events = () => {
 
   const pendingEvents = events.filter(event => !event.isApproved);
 
+  console.log('🎯 About to render Events component main UI');
+
   // Loading state
   if (loading && events.length === 0) {
+    console.log('🔄 Showing loading state');
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar />
@@ -219,6 +244,36 @@ const Events = () => {
             <div className="flex flex-col items-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               <div className="text-gray-600">Etkinlikler yükleniyor...</div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Critical error state
+  if (error && !loading) {
+    console.log('❌ Showing error state:', error);
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="text-red-600 text-center">
+                <h3 className="text-xl font-semibold mb-2">Hata</h3>
+                <p>{error}</p>
+                <button 
+                  onClick={() => {
+                    dispatch(clearError());
+                    dispatch(fetchEvents());
+                  }}
+                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Tekrar Dene
+                </button>
+              </div>
             </div>
           </main>
         </div>
@@ -246,13 +301,22 @@ const Events = () => {
                   </h2>
                   <p className="text-gray-600">Şirket etkinliklerini yönetin ve takip edin</p>
                 </div>
-                <Link 
-                  to="/add-event"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>Yeni Etkinlik</span>
-                </Link>
+                {/* Only show Add Event button for HR users */}
+                {userType === 'hr' && (
+                  <Link 
+                    to="/add-event"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>Yeni Etkinlik</span>
+                  </Link>
+                )}
+                {/* Show info message for employees */}
+                {userType === 'employee' && (
+                  <div className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-lg">
+                    💡 Sadece İK personeli etkinlik oluşturabilir
+                  </div>
+                )}
               </div>
             </div>
 
@@ -343,13 +407,19 @@ const Events = () => {
                 <PartyPopper className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-medium text-gray-900 mb-2">Henüz etkinlik yok</h3>
                 <p className="text-gray-500 mb-6">İlk etkinliğinizi oluşturmak için başlayın</p>
-                <Link 
-                  to="/add-event"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center space-x-2"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>İlk Etkinliği Oluştur</span>
-                </Link>
+                {userType === 'hr' ? (
+                  <Link 
+                    to="/add-event"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center space-x-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>İlk Etkinliği Oluştur</span>
+                  </Link>
+                ) : (
+                  <div className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-lg inline-block">
+                    💡 Sadece İK personeli etkinlik oluşturabilir
+                  </div>
+                )}
               </div>
             )}
 
@@ -371,13 +441,19 @@ const Events = () => {
                     {activeTab === "rejected" && "Şu anda reddedilmiş etkinlik bulunmuyor"}
                     {activeTab === "all" && "Filtreye uygun etkinlik bulunamadı"}
                   </p>
-                  <Link 
-                    to="/add-event"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center space-x-2"
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span>Yeni Etkinlik Oluştur</span>
-                  </Link>
+                  {userType === 'hr' ? (
+                    <Link 
+                      to="/add-event"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center space-x-2"
+                    >
+                      <Plus className="h-5 w-5" />
+                      <span>Yeni Etkinlik Oluştur</span>
+                    </Link>
+                  ) : (
+                    <div className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-lg">
+                      💡 Sadece İK personeli etkinlik oluşturabilir
+                    </div>
+                  )}
                 </div>
               )}
 

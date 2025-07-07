@@ -4,6 +4,7 @@ import announcementReducer from './slices/announcementSlice';
 import employeeReducer from './slices/employeeSlice';
 import newsReducer from './slices/newsSlice';
 import documentsReducer from './slices/documentsSlice';
+import eventsReducer from './slices/eventsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     employees: employeeReducer,
     news: newsReducer,
     documents: documentsReducer,
+    events: eventsReducer,
   },
 });
 

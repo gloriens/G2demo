@@ -24,7 +24,7 @@ const Login = () => {
   // ✅ Zaten giriş yapılmışsa dashboard'a yönlendir
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
@@ -62,7 +62,7 @@ const Login = () => {
           title: "Giriş Başarılı",
           description: "Hoş geldiniz!",
         });
-        navigate('/dashboard');
+        navigate('/');
       }
     } catch (error) {
       console.error('Login error:', error);
