@@ -1,16 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
-import eventsReducer from './slices/eventsSlice';
+import authReducer from './slices/authSlice';
+import announcementReducer from './slices/announcementSlice';
+import employeeReducer from './slices/employeeSlice';
 import newsReducer from './slices/newsSlice';
-import employeeReducer from './slices/employeeSlice'; 
-import announcementReducer from './slices/announcementSlice';   
 import documentsReducer from './slices/documentsSlice';
 
 export const store = configureStore({
   reducer: {
-    events: eventsReducer,
-    news: newsReducer,
-    employees: employeeReducer, 
+    auth: authReducer,
     announcements: announcementReducer,
+    employees: employeeReducer,
+    news: newsReducer,
     documents: documentsReducer,
   },
 });

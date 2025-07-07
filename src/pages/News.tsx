@@ -71,7 +71,7 @@ const News = () => {
         await dispatch(updateNews({
           id: editingNews,
           data: formData,
-          imageFile: selectedFile || undefined
+          coverImage: selectedFile || undefined
         })).unwrap();
         toast({
           title: "Haber Güncellendi",
