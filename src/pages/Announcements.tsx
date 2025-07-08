@@ -1,40 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Clock, Plus, X, Pencil, Trash2, Calendar, Megaphone } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const announcementsInitial = [
+// ✅ Default duyurular - sadece localStorage boşsa kullanılacak
+const defaultAnnouncements = [
   {
+    id: 1,
     title: "Yeni Çalışan Oryantasyon Programı",
-    content:
-      "15 Ocak'ta başlayacak olan yeni çalışan oryantasyon programı için kayıtlar başladı.",
-    date: "Geçerlilik: 2025-07-04 - 2025-07-10",
+    content: "15 Ocak'ta başlayacak olan yeni çalışan oryantasyon programı için kayıtlar başladı.",
     validFrom: "2025-07-04",
     validTo: "2025-07-10",
+    createdAt: new Date().toISOString(),
   },
   {
+    id: 2,
     title: "Şirket Pikniği Duyurusu",
-    content:
-      "Bu yılki şirket pikniği 25 Haziran'da Belgrad Ormanı'nda yapılacaktır.",
-    date: "Geçerlilik: 2025-06-20 - 2025-06-25",
+    content: "Bu yılki şirket pikniği 25 Haziran'da Belgrad Ormanı'nda yapılacaktır.",
     validFrom: "2025-06-20",
     validTo: "2025-06-25",
+    createdAt: new Date().toISOString(),
   },
   {
+    id: 3,
     title: "IT Sistemi Bakım Çalışması",
     content: "Bu hafta sonu IT sistemlerinde bakım çalışması yapılacaktır.",
-    date: "Geçerlilik: 2025-06-28 - 2025-06-30",
     validFrom: "2025-06-28",
     validTo: "2025-06-30",
+    createdAt: new Date().toISOString(),
   },
 ];
 
+// ✅ LocalStorage helper functions
+const STORAGE_KEY = 'company_announcements';
+
+const loadAnnouncementsFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      console.log('📋 Loaded announcements from localStorage:', parsed.length);
+      return parsed;
+    }
+  } catch (error) {
+    console.error('❌ Error loading announcements from localStorage:', error);
+  }
+  
+  // ✅ İlk kez açılıyorsa default verileri kaydet
+  console.log('📋 Using default announcements');
+  saveAnnouncementsToStorage(defaultAnnouncements);
+  return defaultAnnouncements;
+};
+
+const saveAnnouncementsToStorage = (announcements: any[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(announcements));
+    console.log('💾 Saved announcements to localStorage:', announcements.length);
+  } catch (error) {
+    console.error('❌ Error saving announcements to localStorage:', error);
+  }
+};
+
+// ✅ ID generator
+const generateId = () => {
+  return Date.now() + Math.random();
+};
+
 const Announcements = () => {
-  const [announcements, setAnnouncements] = useState(announcementsInitial);
+  // ✅ State'i localStorage'dan başlat
+  const [announcements, setAnnouncements] = useState(() => loadAnnouncementsFromStorage());
   const [showForm, setShowForm] = useState(false);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -44,7 +82,18 @@ const Announcements = () => {
 
   const { toast } = useToast();
 
-  // Yeni: tarih formatlayıcı fonksiyon
+  // ✅ Announcements değiştiğinde localStorage'a kaydet
+  useEffect(() => {
+    saveAnnouncementsToStorage(announcements);
+  }, [announcements]);
+
+  // ✅ Component mount olduğunda localStorage'dan yükle
+  useEffect(() => {
+    const storedAnnouncements = loadAnnouncementsFromStorage();
+    setAnnouncements(storedAnnouncements);
+  }, []);
+
+  // ✅ Tarih formatlayıcı fonksiyon
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-");
     return `${day}.${month}.${year}`;
@@ -62,7 +111,8 @@ const Announcements = () => {
 
     if (!form.title.trim() || !form.content.trim()) {
       toast({
-        title: "Başlık ve içerik alanları zorunludur.",
+        title: "Hata",
+        description: "Başlık ve içerik alanları zorunludur.",
         variant: "destructive",
         duration: 5000,
       });
@@ -71,76 +121,131 @@ const Announcements = () => {
 
     if (form.validTo < form.validFrom) {
       toast({
-        title: "Geçerlilik tarihi, başlangıç tarihinden küçük olamaz.",
+        title: "Hata",
+        description: "Geçerlilik tarihi, başlangıç tarihinden küçük olamaz.",
         variant: "destructive",
         duration: 5000,
       });
       return;
     }
 
-    const updatedAnnouncement = {
-      title: form.title,
-      content: form.content,
-      date: `Geçerlilik: ${form.validFrom} - ${form.validTo}`,
+    const announcementData = {
+      title: form.title.trim(),
+      content: form.content.trim(),
       validFrom: form.validFrom,
       validTo: form.validTo,
+      updatedAt: new Date().toISOString(),
     };
 
-    if (editIndex !== null) {
+    if (editId !== null) {
+      // ✅ Güncelleme
       setAnnouncements((prev) =>
-        prev.map((item, i) => (i === editIndex ? updatedAnnouncement : item))
+        prev.map((item) => 
+          item.id === editId 
+            ? { ...item, ...announcementData }
+            : item
+        )
       );
+      
       toast({
-        title: `"${form.title}" duyurusu güncellendi!`,
+        title: "Başarılı",
+        description: `"${form.title}" duyurusu güncellendi!`,
         variant: "default",
         duration: 5000,
       });
+      
+      console.log('✅ Announcement updated:', editId);
     } else {
-      setAnnouncements((prev) => [updatedAnnouncement, ...prev]);
+      // ✅ Yeni ekleme
+      const newAnnouncement = {
+        id: generateId(),
+        ...announcementData,
+        createdAt: new Date().toISOString(),
+      };
+      
+      setAnnouncements((prev) => [newAnnouncement, ...prev]);
+      
       toast({
-        title: "Duyuru başarıyla eklendi!",
-        variant: "destructive",
+        title: "Başarılı",
+        description: "Duyuru başarıyla eklendi!",
+        variant: "default",
         duration: 5000,
       });
+      
+      console.log('✅ New announcement added:', newAnnouncement);
     }
 
+    // ✅ Form reset
     setForm({
       title: "",
       content: "",
       validFrom: new Date().toISOString().slice(0, 10),
       validTo: new Date().toISOString().slice(0, 10),
     });
-    setEditIndex(null);
+    setEditId(null);
     setShowForm(false);
   };
 
-  const handleEdit = (index: number) => {
-    const selected = announcements[index];
+  const handleEdit = (announcement: any) => {
     setForm({
-      title: selected.title,
-      content: selected.content,
-      validFrom: selected.validFrom,
-      validTo: selected.validTo,
+      title: announcement.title,
+      content: announcement.content,
+      validFrom: announcement.validFrom,
+      validTo: announcement.validTo,
     });
-    setEditIndex(index);
+    setEditId(announcement.id);
     setShowForm(true);
 
     toast({
-      title: `"${selected.title}" düzenlenmek üzere açıldı.`,
+      title: "Düzenleme",
+      description: `"${announcement.title}" düzenlenmek üzere açıldı.`,
       variant: "default",
       duration: 4000,
     });
+    
+    console.log('📝 Editing announcement:', announcement.id);
   };
 
-  const handleDelete = (index: number) => {
-    if (confirm(`"${announcements[index].title}" silinsin mi?`)) {
-      const deletedTitle = announcements[index].title;
-      setAnnouncements((prev) => prev.filter((_, i) => i !== index));
+  const handleDelete = (announcement: any) => {
+    const confirmed = window.confirm(`"${announcement.title}" silinsin mi?`);
+    
+    if (confirmed) {
+      setAnnouncements((prev) => prev.filter((item) => item.id !== announcement.id));
 
       toast({
-        title: `"${deletedTitle}" duyurusu silindi.`,
+        title: "Silindi",
+        description: `"${announcement.title}" duyurusu silindi.`,
         variant: "destructive",
         duration: 4000,
+      });
+      
+      console.log('🗑️ Announcement deleted:', announcement.id);
+    }
+  };
+
+  // ✅ Tüm duyuruları sil (Debug için)
+  const clearAllAnnouncements = () => {
+    const confirmed = window.confirm('Tüm duyuruları silmek istediğinizden emin misiniz?');
+    if (confirmed) {
+      setAnnouncements([]);
+      localStorage.removeItem(STORAGE_KEY);
+      toast({
+        title: "Temizlendi",
+        description: "Tüm duyurular silindi.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // ✅ Default duyuruları geri yükle
+  const resetToDefaults = () => {
+    const confirmed = window.confirm('Varsayılan duyuruları geri yüklemek istiyor musunuz?');
+    if (confirmed) {
+      setAnnouncements(defaultAnnouncements);
+      toast({
+        title: "Geri Yüklendi",
+        description: "Varsayılan duyurular geri yüklendi.",
+        variant: "default",
       });
     }
   };
@@ -159,78 +264,117 @@ const Announcements = () => {
                   Duyurular
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Son duyurular ve önemli bilgiler
+                  Son duyurular ve önemli bilgiler ({announcements.length} duyuru)
                 </p>
               </div>
 
-              <Button
-                onClick={() => {
-                  setShowForm(true);
-                  setEditIndex(null);
-                  setForm({
-                    title: "",
-                    content: "",
-                    validFrom: new Date().toISOString().slice(0, 10),
-                    validTo: new Date().toISOString().slice(0, 10),
-                  });
-                }}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Yeni Duyuru
-              </Button>
+              <div className="flex gap-2">
+                {/* ✅ Debug butonları - geliştirme için */}
+                <Button
+                  onClick={resetToDefaults}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  Varsayılanları Yükle
+                </Button>
+                
+                <Button
+                  onClick={clearAllAnnouncements}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-red-600 hover:text-red-700"
+                >
+                  Tümünü Sil
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setShowForm(true);
+                    setEditId(null);
+                    setForm({
+                      title: "",
+                      content: "",
+                      validFrom: new Date().toISOString().slice(0, 10),
+                      validTo: new Date().toISOString().slice(0, 10),
+                    });
+                  }}
+                  className="flex items-center bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Yeni Duyuru
+                </Button>
+              </div>
             </div>
 
+            {/* ✅ Duyuru listesi */}
             <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-              {announcements.map((announcement, index) => (
-                <div
-                  key={index}
-                  className="p-5 rounded-lg border-l-4 border-blue-500 bg-blue-50 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 flex justify-between items-start"
-                >
-                  <div className="max-w-[80%]">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">
-                      {announcement.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-2">
-                      {announcement.content}
-                    </p>
-                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {`Geçerlilik: ${formatDate(announcement.validFrom)} - ${formatDate(
-                        announcement.validTo
-                      )}`}
+              {announcements.length === 0 ? (
+                <div className="text-center py-12">
+                  <Megaphone className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-500 mb-2">Henüz duyuru yok</h3>
+                  <p className="text-gray-400 mb-4">İlk duyurunuzu eklemek için yukarıdaki butonu kullanın.</p>
+                  <Button onClick={resetToDefaults} variant="outline">
+                    Örnek Duyuruları Yükle
+                  </Button>
+                </div>
+              ) : (
+                announcements.map((announcement) => (
+                  <div
+                    key={announcement.id}
+                    className="p-5 rounded-lg border-l-4 border-blue-500 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow flex justify-between items-start"
+                  >
+                    <div className="max-w-[80%]">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">
+                        {announcement.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-2">
+                        {announcement.content}
+                      </p>
+                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {`Geçerlilik: ${formatDate(announcement.validFrom)} - ${formatDate(
+                          announcement.validTo
+                        )}`}
+                      </div>
+                      {/* ✅ Debug info */}
+                      <div className="text-xs text-gray-400 mt-1">
+                        ID: {announcement.id} | 
+                        {announcement.createdAt && ` Oluşturulma: ${new Date(announcement.createdAt).toLocaleString('tr-TR')}`}
+                        {announcement.updatedAt && ` | Güncelleme: ${new Date(announcement.updatedAt).toLocaleString('tr-TR')}`}
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2 ml-4 min-w-[90px]">
+                      <Button
+                        onClick={() => handleEdit(announcement)}
+                        className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded-md"
+                      >
+                        <Pencil className="w-4 h-4 mr-1" />
+                        Düzenle
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(announcement)}
+                        className="flex items-center bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded-md"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Sil
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-2 ml-4 min-w-[90px]">
-                    <Button
-                      onClick={() => handleEdit(index)}
-                      className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded-md"
-                    >
-                      <Pencil className="w-4 h-4 mr-1" />
-                      Düzenle
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(index)}
-                      className="flex items-center bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded-md"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Sil
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </main>
 
-        {/* Modal Form */}
+        {/* ✅ Modal Form - değişiklik yok */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto p-8 relative">
               <button
                 onClick={() => {
                   setShowForm(false);
-                  setEditIndex(null);
+                  setEditId(null);
                 }}
                 aria-label="Close"
                 className="absolute top-5 right-5 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition"
@@ -239,7 +383,7 @@ const Announcements = () => {
               </button>
 
               <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
-                {editIndex !== null ? "Duyuruyu Düzenle" : "Yeni Duyuru Ekle"}
+                {editId !== null ? "Duyuruyu Düzenle" : "Yeni Duyuru Ekle"}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -326,7 +470,7 @@ const Announcements = () => {
                     type="button"
                     onClick={() => {
                       setShowForm(false);
-                      setEditIndex(null);
+                      setEditId(null);
                     }}
                     className="px-5 py-3 rounded-lg border border-gray-300 hover:bg-red-100 hover:border-red-600 hover:text-red-600 dark:border-gray-600 dark:hover:bg-red-900 dark:hover:border-red-400 dark:hover:text-red-400 shadow-md transition"
                   >
@@ -336,7 +480,7 @@ const Announcements = () => {
                     type="submit"
                     className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md transition"
                   >
-                    {editIndex !== null ? "Duyuruyu Güncelle" : "Duyuru Yayınla"}
+                    {editId !== null ? "Duyuruyu Güncelle" : "Duyuru Yayınla"}
                   </button>
                 </div>
               </form>
