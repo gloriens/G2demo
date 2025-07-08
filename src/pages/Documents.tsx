@@ -226,7 +226,7 @@ const Documents = () => {
       const formData = new FormData();
       
       // ✅ Backend'in beklediği alan adları
-      formData.append('file', file);
+      formData.append('fileData', file);
       formData.append('title', file.name);
       formData.append('description', `${file.name} dosyası yüklendi`);
       formData.append('documentType', selectedCategoryForUpload);

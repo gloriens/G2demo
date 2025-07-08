@@ -270,14 +270,14 @@ const Announcements = () => {
 
               <div className="flex gap-2">
                 {/* ✅ Debug butonları - geliştirme için */}
-                <Button
+                {/* <Button
                   onClick={resetToDefaults}
                   variant="outline"
                   size="sm"
                   className="text-xs"
                 >
                   Varsayılanları Yükle
-                </Button>
+                </Button> */}
                 
                 <Button
                   onClick={clearAllAnnouncements}
